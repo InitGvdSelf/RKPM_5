@@ -4,7 +4,7 @@ import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
 import 'package:rkpm_5/features/meds/screens/today_screen.dart';
 import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class MedsHomeScreen extends StatefulWidget {
   final List<Medicine> medicines;
   final List<DoseEntry> doses;
   final List<DoseEntry> Function(DateTime) dosesForDay;
@@ -18,7 +18,7 @@ class HomeScreen extends StatefulWidget {
   final String Function(DateTime) fmtMonth;
   final String Function(DateTime) fmtTime;
 
-  const HomeScreen({
+  const MedsHomeScreen({
     super.key,
     required this.medicines,
     required this.doses,
@@ -35,10 +35,10 @@ class HomeScreen extends StatefulWidget {
   });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<MedsHomeScreen> createState() => _MedsHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _MedsHomeScreenState extends State<MedsHomeScreen> {
   int tabIndex = 0;
 
   @override

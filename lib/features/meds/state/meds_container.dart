@@ -175,8 +175,10 @@ class MedsContainerState extends State<MedsContainer> {
 
   @override
   Widget build(BuildContext context) {
-    if (!loaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    return HomeScreen(
+    if (!loaded) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    return MedsHomeScreen(
       medicines: medicines,
       doses: doses,
       dosesForDay: dosesForDay,
