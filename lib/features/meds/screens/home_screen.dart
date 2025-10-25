@@ -3,6 +3,7 @@ import 'package:rkpm_5/features/meds/models/medicine.dart';
 import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
 import 'package:rkpm_5/features/meds/screens/today_screen.dart';
 import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
+import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
 
 class MedsHomeScreen extends StatefulWidget {
   final List<Medicine> medicines;
@@ -64,10 +65,8 @@ class _MedsHomeScreenState extends State<MedsHomeScreen> {
             onDeleteMedicine: widget.onDeleteMedicine,
             onRestoreMedicine: widget.onRestoreMedicine,
           ),
-          StatsScreen(
-            meds: widget.medicines,
-            doses: widget.doses,
-          ),
+          StatsScreen(meds: widget.medicines, doses: widget.doses),
+          const ProfileScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -77,6 +76,7 @@ class _MedsHomeScreenState extends State<MedsHomeScreen> {
           NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Расписание'),
           NavigationDestination(icon: Icon(Icons.medication), label: 'Лекарства'),
           NavigationDestination(icon: Icon(Icons.insights), label: 'Статистика'),
+          NavigationDestination(icon: Icon(Icons.person), label: 'Профиль'),
         ],
       ),
     );

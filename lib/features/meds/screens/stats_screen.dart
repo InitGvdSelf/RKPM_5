@@ -22,7 +22,6 @@ class StatsScreen extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: const [
-            // карточки ниже создадим через приватный виджет
           ],
         ),
         Wrap(
