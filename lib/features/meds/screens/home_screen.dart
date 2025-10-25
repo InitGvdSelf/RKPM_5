@@ -45,7 +45,7 @@ class _MedsHomeScreenState extends State<MedsHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Учёт приёма лекарств')),
+      appBar: AppBar(title: const Text('Учёт приёма лекарственных препаратов')),
       body: IndexedStack(
         index: tabIndex,
         children: [
