@@ -1,17 +1,40 @@
-import 'dart:convert';
-
 class Profile {
-  String name;
-  int age;
-  String? avatarUrl;
+  final String id;
+  final String name;
+  final int age;
+  final String? avatarUrl;
 
-  Profile({required this.name, required this.age, this.avatarUrl});
+  const Profile({
+    required this.id,
+    required this.name,
+    required this.age,
+    this.avatarUrl,
+  });
 
-  Map<String, dynamic> toJson() => {'name': name, 'age': age, 'avatarUrl': avatarUrl};
+  Profile copyWith({
+    String? name,
+    int? age,
+    String? avatarUrl,
+  }) {
+    return Profile(
+      id: id,
+      name: name ?? this.name,
+      age: age ?? this.age,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+    );
+  }
 
-  factory Profile.fromJson(Map<String, dynamic> j) =>
-      Profile(name: j['name'] ?? '', age: (j['age'] ?? 0) as int, avatarUrl: j['avatarUrl'] as String?);
+  factory Profile.fromJson(Map<String, dynamic> json) => Profile(
+    id: json['id'] as String,
+    name: json['name'] as String,
+    age: json['age'] as int,
+    avatarUrl: json['avatarUrl'] as String?,
+  );
 
-  String toJsonString() => jsonEncode(toJson());
-  static Profile fromJsonString(String s) => Profile.fromJson(jsonDecode(s) as Map<String, dynamic>);
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'age': age,
+    'avatarUrl': avatarUrl,
+  };
 }

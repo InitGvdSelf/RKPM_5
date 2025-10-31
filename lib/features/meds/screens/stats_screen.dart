@@ -3,58 +3,73 @@ import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 class StatsScreen extends StatelessWidget {
   final List<Medicine> meds;
-  final List<DoseEntry> doses;
+  final List doses;
+  final bool embedded;
 
-  const StatsScreen({super.key, required this.meds, required this.doses});
+  const StatsScreen({
+    super.key,
+    required this.meds,
+    required this.doses,
+    this.embedded = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final taken = doses.where((e) => e.status == DoseStatus.taken).length;
-    final skipped = doses.where((e) => e.status == DoseStatus.skipped).length;
-    final pending = doses.where((e) => e.status == DoseStatus.pending).length;
+    final body = _buildBody(context);
+    if (embedded) return body;
+    return Scaffold(appBar: AppBar(title: const Text('Статистика')), body: body);
+  }
 
-    return Padding(
+  Widget _buildBody(BuildContext context) {
+    final d = doses.cast<DoseEntry>();
+    final totalMeds = meds.length;
+    final taken = d.where((e) => e.status == DoseStatus.taken).length;
+    final pending = d.where((e) => e.status == DoseStatus.pending).length;
+    final skipped = d.where((e) => e.status == DoseStatus.skipped).length;
+
+    return ListView(
       padding: const EdgeInsets.all(16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Общие показатели', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: const [
-          ],
-        ),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+      children: [
+        if (!embedded)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text('Статистика', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
+          ),
+        GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.35,
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
           children: [
-            _StatCard(label: 'Лекарства', value: meds.length.toString()),
-            _StatCard(label: 'Все дозы', value: doses.length.toString()),
-            _StatCard(label: 'Принято', value: taken.toString()),
-            _StatCard(label: 'Пропущено', value: skipped.toString()),
-            _StatCard(label: 'Ожидается', value: pending.toString()),
+            _card(context, Icons.medication, 'Всего лекарств', '$totalMeds', null),
+            _card(context, Icons.check_circle, 'Принято', '$taken', Colors.green),
+            _card(context, Icons.schedule, 'Запланировано', '$pending', Colors.indigo),
+            _card(context, Icons.cancel, 'Пропущено', '$skipped', Colors.orange),
           ],
         ),
-      ]),
+      ],
     );
   }
-}
 
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  const _StatCard({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(value, style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 8),
-          Text(label),
-        ]),
+  Widget _card(BuildContext context, IconData i, String l, String v, Color? c) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 6))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(i, size: 28),
+          const Spacer(),
+          Text(v, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: c ?? Colors.black)),
+          const SizedBox(height: 4),
+          Text(l, style: const TextStyle(color: Colors.black54)),
+        ],
       ),
     );
   }

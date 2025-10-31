@@ -1,51 +1,37 @@
 import 'package:flutter/material.dart';
 
 class SettingsScreen extends StatelessWidget {
+  final bool embedded;
   final bool darkMode;
-  final ValueChanged<bool> onToggleDark;
+  final ValueChanged<bool>? onToggleDark;
 
   const SettingsScreen({
     super.key,
-    required this.darkMode,
-    required this.onToggleDark,
+    this.embedded = false,
+    this.darkMode = false,
+    this.onToggleDark,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const SizedBox(height: 12),
-          const Text('Настройки', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          SwitchListTile(
-            title: const Text('Тёмная тема'),
-            value: darkMode,
-            onChanged: onToggleDark,
+    final body = ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (!embedded)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text('Настройки', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.notifications),
-            title: const Text('Уведомления'),
-            subtitle: const Text('Напоминания о приёме'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Язык интерфейса'),
-            subtitle: const Text('Русский'),
-            onTap: () {},
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('О приложении'),
-            subtitle: const Text('Версия 1.0.0'),
-            onTap: () {},
-          ),
-        ],
-      ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Тёмная тема', style: TextStyle(fontSize: 16)),
+            Switch(value: darkMode, onChanged: (v) => onToggleDark?.call(v)),
+          ],
+        ),
+      ],
     );
+    if (embedded) return body;
+    return Scaffold(appBar: AppBar(title: const Text('Настройки')), body: body);
   }
 }

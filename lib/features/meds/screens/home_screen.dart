@@ -3,18 +3,20 @@ import 'package:rkpm_5/features/meds/models/medicine.dart';
 import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
 import 'package:rkpm_5/features/meds/screens/today_screen.dart';
 import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
-import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
 
 class MedsHomeScreen extends StatefulWidget {
   final List<Medicine> medicines;
   final List<DoseEntry> doses;
   final List<DoseEntry> Function(DateTime) dosesForDay;
+
   final void Function(Medicine) onAddMedicine;
   final void Function(Medicine) onUpdateMedicine;
   final Medicine? Function(String) onDeleteMedicine;
   final void Function(Medicine) onRestoreMedicine;
+
   final void Function(String, DoseStatus) onMarkDose;
   final void Function(String, String) onSetDoseNote;
+
   final String Function(DateTime) fmtDate;
   final String Function(DateTime) fmtMonth;
   final String Function(DateTime) fmtTime;
@@ -45,11 +47,11 @@ class _MedsHomeScreenState extends State<MedsHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Учёт приёма лекарственных препаратов')),
+      appBar: AppBar(title: const Text('Учёт приёма лекарств')),
       body: IndexedStack(
         index: tabIndex,
         children: [
-          ScheduleScreen(
+          TodayScreen(
             medicines: widget.medicines,
             dosesForDay: widget.dosesForDay,
             onMarkDose: widget.onMarkDose,
@@ -65,18 +67,28 @@ class _MedsHomeScreenState extends State<MedsHomeScreen> {
             onDeleteMedicine: widget.onDeleteMedicine,
             onRestoreMedicine: widget.onRestoreMedicine,
           ),
-          StatsScreen(meds: widget.medicines, doses: widget.doses),
-          const ProfileScreen(),
+          StatsScreen(
+            meds: widget.medicines,
+            doses: widget.doses,
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tabIndex,
         onDestinationSelected: (i) => setState(() => tabIndex = i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Расписание'),
-          NavigationDestination(icon: Icon(Icons.medication), label: 'Лекарства'),
-          NavigationDestination(icon: Icon(Icons.insights), label: 'Статистика'),
-          NavigationDestination(icon: Icon(Icons.person), label: 'Профиль'),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month),
+            label: 'Сегодня',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.medication),
+            label: 'Лекарства',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.insights),
+            label: 'Статистика',
+          ),
         ],
       ),
     );

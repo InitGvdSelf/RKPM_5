@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
 class MainMenuScreen extends StatelessWidget {
-  const MainMenuScreen({super.key});
+  final Map<String, WidgetBuilder>? routes;
+  const MainMenuScreen({super.key, this.routes});
 
   @override
   Widget build(BuildContext context) {
-    final items = <_MenuItem>[
-      _MenuItem('Главная', Icons.home, '/stats'),
-      _MenuItem('Сегодня', Icons.calendar_month, '/today'),
-      _MenuItem('Лекарства', Icons.medication, '/meds'),
-      _MenuItem('Настройки', Icons.settings, '/settings'),
-      _MenuItem('Профиль', Icons.person, '/profile'),
+    final items = <_Item>[
+      _Item('Статистика', Icons.home, '/stats'),
+      _Item('Сегодня', Icons.calendar_month, '/today'),
+      _Item('Лекарства', Icons.medication, '/meds'),
+      _Item('Профиль', Icons.person, '/profile'),
+      _Item('Настройки', Icons.settings, '/settings'),
     ];
-
     return Scaffold(
       appBar: AppBar(title: const Text('Меню')),
       body: Padding(
@@ -23,33 +23,27 @@ class MainMenuScreen extends StatelessWidget {
           mainAxisSpacing: 12,
           children: items.map((e) {
             return InkWell(
-              onTap: () => Navigator.of(context).pushNamed(e.route),
+              onTap: () {
+                if (routes != null && routes!.containsKey(e.route)) {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => routes![e.route]!.call(context)));
+                } else {
+                  Navigator.of(context).pushNamed(e.route);
+                }
+              },
               borderRadius: BorderRadius.circular(16),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
+                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 6))],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(e.icon, size: 36),
                     const SizedBox(height: 12),
-                    Text(
-                      e.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text(e.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -61,9 +55,9 @@ class MainMenuScreen extends StatelessWidget {
   }
 }
 
-class _MenuItem {
+class _Item {
   final String title;
   final IconData icon;
   final String route;
-  _MenuItem(this.title, this.icon, this.route);
+  _Item(this.title, this.icon, this.route);
 }
