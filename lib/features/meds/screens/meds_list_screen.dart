@@ -22,14 +22,18 @@ class MedsListScreen extends StatelessWidget {
   });
 
   Future<void> _add(BuildContext context) async {
-    final created = await Navigator.of(context).push<Medicine>(
+    final created = await Navigator.push<Medicine>(
+      context,
       MaterialPageRoute(builder: (_) => const MedFormScreen()),
     );
-    if (created != null) onAddMedicine(created);
+    if (created != null) {
+      onAddMedicine(created);
+      Navigator.pop(context);
+    }
   }
-
-  void _openDetails(BuildContext context, Medicine m) async {
-    final updated = await Navigator.of(context).push<Medicine>(
+  Future<void> _openDetails(BuildContext context, Medicine m) async {
+    final updated = await Navigator.push<Medicine>(
+      context,
       MaterialPageRoute(
         builder: (_) => MedDetailsScreen(
           medicine: m,
@@ -39,7 +43,10 @@ class MedsListScreen extends StatelessWidget {
         ),
       ),
     );
-    if (updated != null) onUpdateMedicine(updated);
+    if (updated != null) {
+      onUpdateMedicine(updated);
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -80,7 +87,8 @@ class MedsListScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const Text(
               'Нет лекарств',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              style:
+              TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             const Text(
