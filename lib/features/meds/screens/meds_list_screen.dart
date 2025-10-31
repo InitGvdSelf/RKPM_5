@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 import 'package:rkpm_5/features/meds/screens/med_form_screen.dart';
+import 'package:rkpm_5/features/meds/screens/med_details_screen.dart';
 import 'package:rkpm_5/features/meds/widgets/med_tile.dart';
 import 'package:rkpm_5/shared/widgets/empty_state.dart';
 
@@ -65,8 +66,12 @@ class _MedsListScreenState extends State<MedsListScreen> {
                       title: const Text('Удалить лекарство?'),
                       content: Text('«${m.name}» будет удалено.'),
                       actions: [
-                        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Отмена')),
-                        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Удалить')),
+                        TextButton(
+                            onPressed: () => Navigator.pop(c, false),
+                            child: const Text('Отмена')),
+                        FilledButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            child: const Text('Удалить')),
                       ],
                     ),
                   );
@@ -80,7 +85,8 @@ class _MedsListScreenState extends State<MedsListScreen> {
                         content: Text('Удалено: ${removed.name}'),
                         action: SnackBarAction(
                           label: 'Отмена',
-                          onPressed: () => widget.onRestoreMedicine(removed),
+                          onPressed: () =>
+                              widget.onRestoreMedicine(removed),
                         ),
                       ),
                     );
@@ -90,13 +96,11 @@ class _MedsListScreenState extends State<MedsListScreen> {
                 child: MedTile(
                   med: m,
                   onTap: () async {
-                    final updated = await Navigator.of(context).push<Medicine>(
-                      MaterialPageRoute(builder: (_) => MedFormScreen(existing: m)),
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => MedDetailsScreen(medId: m.id),
+                      ),
                     );
-                    if (updated != null) {
-                      widget.onUpdateMedicine(updated);
-                      setState(() {});
-                    }
                   },
                 ),
               );
