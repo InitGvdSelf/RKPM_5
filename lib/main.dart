@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:rkpm_5/features/meds/state/image_service.dart';
-import 'package:rkpm_5/features/meds/state/meds_container.dart';
+import 'package:rkpm_5/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,9 +16,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Meds Tracker',
+      routerConfig: appRouter,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -30,7 +31,6 @@ class MyApp extends StatelessWidget {
       ],
       locale: const Locale('ru', 'RU'),
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.teal),
-      home: const MedsContainer(),
     );
   }
 }
