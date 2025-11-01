@@ -2,59 +2,125 @@ import 'package:flutter/material.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 class StatsScreen extends StatelessWidget {
-  final List<Medicine> meds;
+  final List<Medicine> medicines;
   final List<DoseEntry> doses;
 
-  const StatsScreen({super.key, required this.meds, required this.doses});
+  const StatsScreen({
+    super.key,
+    required this.medicines,
+    required this.doses,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final taken = doses.where((e) => e.status == DoseStatus.taken).length;
+    final totalMeds = medicines.length;
+    final totalDoses = doses.length;
+    final taken   = doses.where((e) => e.status == DoseStatus.taken).length;
     final skipped = doses.where((e) => e.status == DoseStatus.skipped).length;
     final pending = doses.where((e) => e.status == DoseStatus.pending).length;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Общие показатели', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: const [
-          ],
-        ),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+    return Scaffold(
+      appBar: AppBar(title: const Text('Статистика')),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            _StatCard(label: 'Лекарства', value: meds.length.toString()),
-            _StatCard(label: 'Все дозы', value: doses.length.toString()),
-            _StatCard(label: 'Принято', value: taken.toString()),
-            _StatCard(label: 'Пропущено', value: skipped.toString()),
-            _StatCard(label: 'Ожидается', value: pending.toString()),
+            _StatHeader(title: 'Общая статистика'),
+            const SizedBox(height: 12),
+            _StatCard(
+              icon: Icons.medication,
+              title: 'Лекарств',
+              value: '$totalMeds',
+            ),
+            _StatCard(
+              icon: Icons.event_note,
+              title: 'Всего доз',
+              value: '$totalDoses',
+            ),
+            const SizedBox(height: 16),
+            _StatHeader(title: 'По статусам'),
+            const SizedBox(height: 12),
+            _StatCard(
+              icon: Icons.check_circle,
+              title: 'Принято',
+              value: '$taken',
+            ),
+            _StatCard(
+              icon: Icons.remove_circle,
+              title: 'Пропущено',
+              value: '$skipped',
+            ),
+            _StatCard(
+              icon: Icons.pending_actions,
+              title: 'Ожидает',
+              value: '$pending',
+            ),
+            const SizedBox(height: 24),
           ],
         ),
-      ]),
+      ),
+      // Если когда-нибудь понадобится нижняя кнопка — используем FAB,
+      // чтобы не конфликтовать с home-indicator.
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      // floatingActionButton: Padding(
+      //   padding: EdgeInsets.only(
+      //     bottom: MediaQuery.of(context).viewPadding.bottom + 8,
+      //     left: 12,
+      //     right: 12,
+      //   ),
+      //   child: SizedBox(
+      //     width: double.infinity,
+      //     child: FilledButton.icon(
+      //       onPressed: () { /* ваш экшен */ },
+      //       icon: const Icon(Icons.ios_share),
+      //       label: const Text('Экспорт отчёта'),
+      //     ),
+      //   ),
+      // ),
+    );
+  }
+}
+
+class _StatHeader extends StatelessWidget {
+  final String title;
+  const _StatHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 }
 
 class _StatCard extends StatelessWidget {
-  final String label;
+  final IconData icon;
+  final String title;
   final String value;
-  const _StatCard({required this.label, required this.value});
+
+  const _StatCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(value, style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 8),
-          Text(label),
-        ]),
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Icon(icon),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        trailing: Text(
+          value,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
       ),
     );
   }

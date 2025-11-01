@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+
 import 'package:rkpm_5/features/meds/models/medicine.dart';
-import 'package:rkpm_5/features/meds/screens/home_screen.dart';
+
+import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
+import 'package:rkpm_5/features/meds/screens/today_screen.dart';
+import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
+import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
 
 class MedsContainer extends StatefulWidget {
   const MedsContainer({super.key});
@@ -15,6 +20,7 @@ class MedsContainer extends StatefulWidget {
 class MedsContainerState extends State<MedsContainer> {
   final _uuid = const Uuid();
   bool loaded = false;
+
   List<Medicine> medicines = [];
   List<DoseEntry> doses = [];
 
@@ -28,31 +34,51 @@ class MedsContainerState extends State<MedsContainer> {
     final sp = await SharedPreferences.getInstance();
     final m = sp.getString('meds');
     final d = sp.getString('doses');
-    if (m != null) medicines = (jsonDecode(m) as List).map((e) => Medicine.fromJson(e)).toList();
-    if (d != null) doses = (jsonDecode(d) as List).map((e) => DoseEntry.fromJson(e)).toList();
+
+    if (m != null) {
+      medicines =
+          (jsonDecode(m) as List).map((e) => Medicine.fromJson(e)).toList();
+    }
+    if (d != null) {
+      doses =
+          (jsonDecode(d) as List).map((e) => DoseEntry.fromJson(e)).toList();
+    }
+
     _ensureFutureDoses();
     setState(() => loaded = true);
   }
 
   Future<void> _save() async {
     final sp = await SharedPreferences.getInstance();
-    await sp.setString('meds', jsonEncode(medicines.map((e) => e.toJson()).toList()));
-    await sp.setString('doses', jsonEncode(doses.map((e) => e.toJson()).toList()));
+    await sp.setString(
+      'meds',
+      jsonEncode(medicines.map((e) => e.toJson()).toList()),
+    );
+    await sp.setString(
+      'doses',
+      jsonEncode(doses.map((e) => e.toJson()).toList()),
+    );
   }
 
   void _ensureFutureDoses() {
     final now = DateTime.now();
     final startDay = DateTime(now.year, now.month, now.day);
     final horizon = startDay.add(const Duration(days: 29));
-    final existing = <String>{for (var d in doses) _doseKey(d.medicineId, d.plannedAt)};
+    final existing = <String>{
+      for (var d in doses) _doseKey(d.medicineId, d.plannedAt)
+    };
+
     for (final med in medicines) {
       if (!med.schedule.active) continue;
+
       if (med.schedule.mode == ScheduleMode.weekly) {
         DateTime day = startDay;
         while (!day.isAfter(horizon)) {
           if (med.schedule.daysOfWeek.contains(day.weekday)) {
             for (final t in med.schedule.times) {
-              final planned = DateTime(day.year, day.month, day.day, t.hour, t.minute);
+              final planned = DateTime(
+                day.year, day.month, day.day, t.hour, t.minute,
+              );
               final key = _doseKey(med.id, planned);
               if (!existing.contains(key)) {
                 doses.add(DoseEntry(
@@ -86,11 +112,13 @@ class MedsContainerState extends State<MedsContainer> {
         }
       }
     }
+
     doses.sort((a, b) => a.plannedAt.compareTo(b.plannedAt));
   }
 
   String _doseKey(String medId, DateTime dt) => '$medId@${dt.toIso8601String()}';
 
+  // ---------- CRUD ----------
   void addMedicine(Medicine m) {
     medicines.add(m);
     _ensureFutureDoses();
@@ -101,7 +129,12 @@ class MedsContainerState extends State<MedsContainer> {
   void updateMedicine(Medicine m) {
     final i = medicines.indexWhere((e) => e.id == m.id);
     if (i >= 0) medicines[i] = m;
-    doses.removeWhere((e) => e.medicineId == m.id && e.plannedAt.isAfter(DateTime.now()) && e.status == DoseStatus.pending);
+
+    doses.removeWhere((e) =>
+    e.medicineId == m.id &&
+        e.plannedAt.isAfter(DateTime.now()) &&
+        e.status == DoseStatus.pending);
+
     _ensureFutureDoses();
     _save();
     setState(() {});
@@ -157,7 +190,9 @@ class MedsContainerState extends State<MedsContainer> {
   List<DoseEntry> dosesForDay(DateTime day) {
     final start = DateTime(day.year, day.month, day.day);
     final end = start.add(const Duration(days: 1));
-    return doses.where((d) => !d.plannedAt.isBefore(start) && d.plannedAt.isBefore(end)).toList();
+    return doses
+        .where((d) => !d.plannedAt.isBefore(start) && d.plannedAt.isBefore(end))
+        .toList();
   }
 
   Map<String, int> stats() {
@@ -166,31 +201,75 @@ class MedsContainerState extends State<MedsContainer> {
     final taken = doses.where((e) => e.status == DoseStatus.taken).length;
     final skipped = doses.where((e) => e.status == DoseStatus.skipped).length;
     final pending = doses.where((e) => e.status == DoseStatus.pending).length;
-    return {'meds': totalMeds, 'doses': totalDoses, 'taken': taken, 'skipped': skipped, 'pending': pending};
+    return {
+      'meds': totalMeds,
+      'doses': totalDoses,
+      'taken': taken,
+      'skipped': skipped,
+      'pending': pending,
+    };
   }
 
   String fmtDate(DateTime d) => DateFormat('dd.MM.yyyy', 'ru').format(d);
   String fmtMonth(DateTime d) => DateFormat('LLLL yyyy', 'ru').format(d);
   String fmtTime(DateTime d) => DateFormat('HH:mm', 'ru').format(d);
 
+  // ---------- Вертикальные переходы из профиля ----------
+  void _openToday(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ScheduleScreen(
+          medicines: medicines,
+          dosesForDay: dosesForDay,
+          onMarkDose: markDose,
+          onSetDoseNote: setDoseNote,
+          fmtDate: fmtDate,
+          fmtMonth: fmtMonth,
+          fmtTime: fmtTime,
+        ),
+      ),
+    );
+  }
+
+  void _openMeds(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MedsListScreen(
+          medicines: medicines,
+          onAddMedicine: addMedicine,
+          onUpdateMedicine: updateMedicine,
+          onDeleteMedicine: deleteMedicine,
+          onRestoreMedicine: restoreMedicine,
+        ),
+      ),
+    );
+  }
+
+  void _openStats(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StatsScreen(
+          medicines: medicines,
+          doses: doses,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!loaded) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    return MedsHomeScreen(
-      medicines: medicines,
-      doses: doses,
-      dosesForDay: dosesForDay,
-      onAddMedicine: addMedicine,
-      onUpdateMedicine: updateMedicine,
-      onDeleteMedicine: deleteMedicine,
-      onRestoreMedicine: restoreMedicine,
-      onMarkDose: markDose,
-      onSetDoseNote: setDoseNote,
-      fmtDate: fmtDate,
-      fmtMonth: fmtMonth,
-      fmtTime: fmtTime,
+
+    // Стартуем с Профиля. Дальше — кнопками (push/pop).
+    return ProfileScreen(
+      onOpenToday: () => _openToday(context),
+      onOpenMeds: () => _openMeds(context),
+      onOpenStats: () => _openStats(context),
     );
   }
 }

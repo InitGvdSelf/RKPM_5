@@ -65,7 +65,10 @@ class _MedsHomeScreenState extends State<MedsHomeScreen> {
             onDeleteMedicine: widget.onDeleteMedicine,
             onRestoreMedicine: widget.onRestoreMedicine,
           ),
-          StatsScreen(meds: widget.medicines, doses: widget.doses),
+          StatsScreen(
+            medicines: widget.medicines,
+            doses: widget.doses,
+          ),
           const ProfileScreen(),
         ],
       ),
