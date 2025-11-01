@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:rkpm_5/features/meds/state/meds_container.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rkpm_5/app_router.dart';
+import 'package:rkpm_5/features/meds/state/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
-
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
@@ -21,14 +22,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 500)); // имитация
+    await AuthService.instance.signUp(
+      name: _name.text.trim(),
+      email: _email.text.trim(),
+      password: _pass.text,
+    );
     if (!mounted) return;
     setState(() => _loading = false);
-
-    // ГОРИЗОНТАЛЬНО (без «Назад» к регистрации):
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MedsContainer()),
-    );
+    context.go(Routes.profile);
   }
 
   @override
@@ -46,24 +47,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   TextFormField(
                     controller: _name,
-                    decoration: const InputDecoration(
-                        labelText: 'Имя', prefixIcon: Icon(Icons.person)),
+                    decoration: const InputDecoration(labelText: 'Имя', prefixIcon: Icon(Icons.person)),
                     validator: (v) => (v==null||v.isEmpty) ? 'Введите имя' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                        labelText: 'Email', prefixIcon: Icon(Icons.mail)),
+                    decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail)),
                     validator: (v) => (v==null||v.isEmpty) ? 'Введите email' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _pass,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                        labelText: 'Пароль', prefixIcon: Icon(Icons.lock)),
+                    decoration: const InputDecoration(labelText: 'Пароль', prefixIcon: Icon(Icons.lock)),
                     validator: (v) => (v==null||v.length<4) ? 'Минимум 4 символа' : null,
                   ),
                   const SizedBox(height: 20),

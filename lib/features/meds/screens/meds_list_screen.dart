@@ -48,22 +48,13 @@ class _MedsListScreenState extends State<MedsListScreen> {
   @override
   Widget build(BuildContext context) {
     final meds = widget.medicines;
+    final hasMeds = meds.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Лекарства')),
       body: SafeArea(
-        child: meds.isEmpty
-            ? EmptyState(
-          icon: Icons.medication,
-          title: 'Нет лекарств',
-          subtitle: 'Добавьте первое лекарство',
-          action: FilledButton.icon(
-            onPressed: _add,
-            icon: const Icon(Icons.add),
-            label: const Text('Добавить лекарство'),
-          ),
-        )
-            : ListView.builder(
+        child: hasMeds
+            ? ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: meds.length,
           itemBuilder: (context, i) {
@@ -99,7 +90,8 @@ class _MedsListScreenState extends State<MedsListScreen> {
                       content: Text('Удалено: ${removed.name}'),
                       action: SnackBarAction(
                         label: 'Отмена',
-                        onPressed: () => widget.onRestoreMedicine(removed),
+                        onPressed: () =>
+                            widget.onRestoreMedicine(removed),
                       ),
                     ),
                   );
@@ -112,12 +104,22 @@ class _MedsListScreenState extends State<MedsListScreen> {
               ),
             );
           },
+        )
+            : EmptyState(
+          icon: Icons.medication,
+          title: 'Нет лекарств',
+          subtitle: 'Добавьте первое лекарство',
+          action: FilledButton.icon(
+            onPressed: _add,
+            icon: const Icon(Icons.add),
+            label: const Text('Добавить лекарство'),
+          ),
         ),
       ),
-
-      // Кнопка теперь не «едет» под home bar
+      // Показываем широкую кнопку снизу ТОЛЬКО если список не пуст
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
+      floatingActionButton: hasMeds
+          ? Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewPadding.bottom + 8,
           left: 12,
@@ -131,7 +133,8 @@ class _MedsListScreenState extends State<MedsListScreen> {
             label: const Text('Добавить лекарство'),
           ),
         ),
-      ),
+      )
+          : null,
     );
   }
 }

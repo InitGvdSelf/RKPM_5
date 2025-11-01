@@ -1,9 +1,13 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
-import 'package:rkpm_5/features/meds/screens/login_screen.dart';
+import 'package:rkpm_5/app_router.dart';
+import 'package:rkpm_5/features/meds/state/meds_state.dart';
+import 'package:rkpm_5/features/meds/state/meds_repository.dart';
+import 'package:rkpm_5/features/meds/state/dose_scheduler.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,13 +21,24 @@ class RKPMApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    final medsState = MedsState(
+      repository: MedsRepository(),
+      scheduler: DoseScheduler(),
+    );
+    final appRouter = AppRouter(medsState);
+
+    return MaterialApp.router(
       title: 'RKPM',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.teal),
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      routerConfig: appRouter.router,
+      locale: const Locale('ru', 'RU'),
       supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
-      home: const LoginScreen(),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
     );
   }
 }

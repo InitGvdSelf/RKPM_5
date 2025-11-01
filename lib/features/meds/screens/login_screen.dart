@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:rkpm_5/features/meds/screens/register_screen.dart';
-import 'package:rkpm_5/features/meds/state/meds_container.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rkpm_5/app_router.dart';
+import 'package:rkpm_5/features/meds/state/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -22,22 +22,13 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 400)); // имитация
+    await AuthService.instance.signIn(email: _email.text.trim(), password: _pass.text);
     if (!mounted) return;
     setState(() => _loading = false);
-
-    // ГОРИЗОНТАЛЬНО (без возможности вернуться назад на логин):
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MedsContainer()),
-    );
+    context.go(Routes.profile); // замена pushReplacement на router
   }
 
-  void _openRegister() {
-    // ВЕРТИКАЛЬНО (можно вернуться на логин):
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-    );
-  }
+  void _openRegister() => context.push('/register'); // если есть экран регистрации в роутере
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                        labelText: 'Email', prefixIcon: Icon(Icons.mail)),
+                    decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail)),
                     validator: (v) => (v==null||v.isEmpty) ? 'Введите email' : null,
                   ),
                   const SizedBox(height: 12),

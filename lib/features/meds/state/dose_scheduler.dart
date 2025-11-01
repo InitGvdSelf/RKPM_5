@@ -12,6 +12,7 @@ class DoseScheduler {
 
     for (final med in medicines) {
       if (!med.schedule.active) continue;
+
       if (med.schedule.mode == ScheduleMode.weekly) {
         _generateWeekly(med, doses, existing, startDay, horizon);
       } else {
@@ -22,11 +23,21 @@ class DoseScheduler {
     doses.sort((a, b) => a.plannedAt.compareTo(b.plannedAt));
   }
 
-  void _generateWeekly(Medicine med, List<DoseEntry> doses, Set<String> existing,
-      DateTime start, DateTime horizon) {
+  void _generateWeekly(
+      Medicine med,
+      List<DoseEntry> doses,
+      Set<String> existing,
+      DateTime start,
+      DateTime horizon,
+      ) {
+    // Если дни недели не заданы — считаем, что надо КАЖДЫЙ ДЕНЬ (1..7)
+    final effectiveDays = (med.schedule.daysOfWeek.isEmpty)
+        ? {1, 2, 3, 4, 5, 6, 7}
+        : med.schedule.daysOfWeek;
+
     DateTime day = start;
     while (!day.isAfter(horizon)) {
-      if (med.schedule.daysOfWeek.contains(day.weekday)) {
+      if (effectiveDays.contains(day.weekday)) {
         for (final t in med.schedule.times) {
           final planned = DateTime(day.year, day.month, day.day, t.hour, t.minute);
           final key = '${med.id}@${planned.toIso8601String()}';
@@ -45,8 +56,13 @@ class DoseScheduler {
     }
   }
 
-  void _generateManual(Medicine med, List<DoseEntry> doses, Set<String> existing,
-      DateTime start, DateTime horizon) {
+  void _generateManual(
+      Medicine med,
+      List<DoseEntry> doses,
+      Set<String> existing,
+      DateTime start,
+      DateTime horizon,
+      ) {
     for (final date in med.schedule.dates) {
       for (final t in med.schedule.times) {
         final d = DateTime(date.year, date.month, date.day, t.hour, t.minute);

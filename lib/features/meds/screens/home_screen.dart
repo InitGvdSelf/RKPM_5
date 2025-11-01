@@ -5,7 +5,7 @@ import 'package:rkpm_5/features/meds/screens/today_screen.dart';
 import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
 import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
 
-class MedsHomeScreen extends StatefulWidget {
+class MedsHomeScreen extends StatelessWidget {
   final List<Medicine> medicines;
   final List<DoseEntry> doses;
   final List<DoseEntry> Function(DateTime) dosesForDay;
@@ -35,52 +35,93 @@ class MedsHomeScreen extends StatefulWidget {
     required this.fmtTime,
   });
 
-  @override
-  State<MedsHomeScreen> createState() => _MedsHomeScreenState();
-}
+  void _openSchedule(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ScheduleScreen(
+          medicines: medicines,
+          dosesForDay: dosesForDay,
+          onMarkDose: onMarkDose,
+          onSetDoseNote: onSetDoseNote,
+          fmtDate: fmtDate,
+          fmtMonth: fmtMonth,
+          fmtTime: fmtTime,
+        ),
+      ),
+    );
+  }
 
-class _MedsHomeScreenState extends State<MedsHomeScreen> {
-  int tabIndex = 0;
+  void _openMeds(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MedsListScreen(
+          medicines: medicines,
+          onAddMedicine: onAddMedicine,
+          onUpdateMedicine: onUpdateMedicine,
+          onDeleteMedicine: onDeleteMedicine,
+          onRestoreMedicine: onRestoreMedicine,
+        ),
+      ),
+    );
+  }
+
+  void _openStats(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StatsScreen(
+          medicines: medicines,
+          doses: doses,
+        ),
+      ),
+    );
+  }
+
+  void _openProfile(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Учёт приёма лекарственных препаратов')),
-      body: IndexedStack(
-        index: tabIndex,
-        children: [
-          ScheduleScreen(
-            medicines: widget.medicines,
-            dosesForDay: widget.dosesForDay,
-            onMarkDose: widget.onMarkDose,
-            onSetDoseNote: widget.onSetDoseNote,
-            fmtDate: widget.fmtDate,
-            fmtMonth: widget.fmtMonth,
-            fmtTime: widget.fmtTime,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FilledButton.icon(
+                onPressed: () => _openSchedule(context),
+                icon: const Icon(Icons.calendar_month),
+                label: const Text('Расписание'),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () => _openMeds(context),
+                icon: const Icon(Icons.medication),
+                label: const Text('Лекарства'),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () => _openStats(context),
+                icon: const Icon(Icons.insights),
+                label: const Text('Статистика'),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () => _openProfile(context),
+                icon: const Icon(Icons.person),
+                label: const Text('Профиль'),
+              ),
+            ],
           ),
-          MedsListScreen(
-            medicines: widget.medicines,
-            onAddMedicine: widget.onAddMedicine,
-            onUpdateMedicine: widget.onUpdateMedicine,
-            onDeleteMedicine: widget.onDeleteMedicine,
-            onRestoreMedicine: widget.onRestoreMedicine,
-          ),
-          StatsScreen(
-            medicines: widget.medicines,
-            doses: widget.doses,
-          ),
-          const ProfileScreen(),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: tabIndex,
-        onDestinationSelected: (i) => setState(() => tabIndex = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Расписание'),
-          NavigationDestination(icon: Icon(Icons.medication), label: 'Лекарства'),
-          NavigationDestination(icon: Icon(Icons.insights), label: 'Статистика'),
-          NavigationDestination(icon: Icon(Icons.person), label: 'Профиль'),
-        ],
+        ),
       ),
     );
   }

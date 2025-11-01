@@ -33,11 +33,10 @@ class _MedFormScreenState extends State<MedFormScreen> {
     doseCtrl = TextEditingController(text: widget.existing?.dose ?? '');
     notesCtrl = TextEditingController(text: widget.existing?.notes ?? '');
     imageUrlCtrl = TextEditingController(text: widget.existing?.imageUrl ?? '');
-
     _schedule = widget.existing?.schedule ??
         Schedule.weekly(
           active: true,
-          daysOfWeek: {1, 3, 5},
+          daysOfWeek: {1, 2, 3, 4, 5, 6, 7}, // каждый день недели
           times: const [Clock(9, 0)],
         );
 

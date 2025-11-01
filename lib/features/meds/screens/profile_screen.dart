@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:rkpm_5/app_router.dart';
 import 'package:rkpm_5/features/meds/models/profile.dart';
 import 'package:rkpm_5/features/meds/state/profile_storage.dart';
 import 'package:rkpm_5/features/meds/state/image_service.dart';
-
-import 'package:rkpm_5/features/meds/screens/login_screen.dart';
+import 'package:rkpm_5/features/meds/state/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -15,7 +16,6 @@ class ProfileScreen extends StatefulWidget {
     this.onOpenStats,
   });
 
-  /// Вертикальные переходы (Navigator.push) — задаются снаружи.
   final VoidCallback? onOpenToday;
   final VoidCallback? onOpenMeds;
   final VoidCallback? onOpenStats;
@@ -27,7 +27,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late final TextEditingController nameCtrl;
   late final TextEditingController ageCtrl;
-
   Profile? profile;
 
   @override
@@ -72,11 +71,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => profile = updated);
   }
 
-  /// Горизонтальная навигация (замена экрана) — назад вернуться нельзя.
-  void _signOut() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+  /// Горизонтальный выход с очисткой данных
+  Future<void> _signOut() async {
+    await AuthService.instance.signOut();
+    if (!mounted) return;
+    context.go(Routes.login);
   }
 
   @override
@@ -89,13 +88,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final avatarUrl = profile?.avatarUrl;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Профиль')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Аватар
+          // --- Аватар ---
           Center(
             child: GestureDetector(
               onTap: _changeAvatar,
@@ -111,7 +111,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fit: BoxFit.cover,
                     placeholder: (_, __) => const Padding(
                       padding: EdgeInsets.all(12),
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child:
+                      CircularProgressIndicator(strokeWidth: 2),
                     ),
                     errorWidget: (_, __, ___) =>
                     const Icon(Icons.person, size: 60),
@@ -123,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Поля профиля
+          // --- Поля профиля ---
           TextField(
             controller: nameCtrl,
             decoration: const InputDecoration(labelText: 'Имя'),
@@ -145,24 +146,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Divider(),
           const SizedBox(height: 12),
 
-          // Кнопки вертикальной навигации (push / pop)
-          Text('Разделы', style: Theme.of(context).textTheme.titleMedium),
+          // --- Навигация ---
+          Text('Разделы', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
 
           FilledButton.tonalIcon(
-            onPressed: widget.onOpenToday,
+            onPressed:
+            widget.onOpenToday ?? () => context.push(Routes.schedule),
             icon: const Icon(Icons.calendar_today),
             label: const Text('Расписание'),
           ),
           const SizedBox(height: 8),
           FilledButton.tonalIcon(
-            onPressed: widget.onOpenMeds,
+            onPressed:
+            widget.onOpenMeds ?? () => context.push(Routes.meds),
             icon: const Icon(Icons.medication),
             label: const Text('Лекарства'),
           ),
           const SizedBox(height: 8),
           FilledButton.tonalIcon(
-            onPressed: widget.onOpenStats,
+            onPressed:
+            widget.onOpenStats ?? () => context.push(Routes.stats),
             icon: const Icon(Icons.query_stats),
             label: const Text('Статистика'),
           ),
@@ -171,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Divider(),
           const SizedBox(height: 12),
 
-          // Выход (горизонтальная навигация pushReplacement)
+          // --- Выход ---
           FilledButton.icon(
             onPressed: _signOut,
             icon: const Icon(Icons.logout),
