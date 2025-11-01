@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
+
+// state + infra
+import 'package:rkpm_5/features/meds/state/meds_state.dart';
+
+// экраны
+import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
+import 'package:rkpm_5/features/meds/screens/today_screen.dart';
+import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
+import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
 import 'package:rkpm_5/features/meds/screens/register_screen.dart';
-import 'package:rkpm_5/features/meds/state/meds_container.dart';
+// state + infra
+import 'package:rkpm_5/features/meds/state/meds_state.dart';
+import 'package:rkpm_5/features/meds/state/meds_repository.dart' as repo;
+import 'package:rkpm_5/features/meds/state/dose_scheduler.dart' as sched;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -22,18 +33,59 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 400)); // имитация
+
+    final medsState = MedsState(
+      repository: repo.MedsRepository(),
+      scheduler:  sched.DoseScheduler(),
+    );
+    await medsState.init();
+
     if (!mounted) return;
     setState(() => _loading = false);
 
-    // ГОРИЗОНТАЛЬНО (без возможности вернуться назад на логин):
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MedsContainer()),
+    final nav = Navigator.of(context);
+
+    nav.pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(
+          onOpenToday: () {
+            nav.push(MaterialPageRoute(
+              builder: (_) => ScheduleScreen(
+                medicines: medsState.medicines,
+                dosesForDay: medsState.dosesForDay,
+                onMarkDose: medsState.markDose,
+                onSetDoseNote: medsState.setDoseNote,
+                fmtDate: medsState.fmtDate,
+                fmtMonth: medsState.fmtMonth,
+                fmtTime: medsState.fmtTime,
+              ),
+            ));
+          },
+          onOpenMeds: () {
+            nav.push(MaterialPageRoute(
+              builder: (_) => MedsListScreen(
+                medicines: medsState.medicines,
+                onAddMedicine: medsState.addMedicine,
+                onUpdateMedicine: medsState.updateMedicine,
+                onDeleteMedicine: medsState.deleteMedicine,
+                onRestoreMedicine: medsState.restoreMedicine,
+              ),
+            ));
+          },
+          onOpenStats: () {
+            nav.push(MaterialPageRoute(
+              builder: (_) => StatsScreen(
+                medicines: medsState.medicines,
+                doses: medsState.doses,
+              ),
+            ));
+          },
+        ),
+      ),
     );
   }
 
   void _openRegister() {
-    // ВЕРТИКАЛЬНО (можно вернуться на логин):
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const RegisterScreen()),
     );

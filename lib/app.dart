@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:rkpm_5/shared/app_theme.dart';
-import 'package:rkpm_5/features/meds/state/meds_container.dart';
+import 'package:rkpm_5/features/meds/screens/login_screen.dart'; // +++
 
 class MedsApp extends StatelessWidget {
   const MedsApp({super.key});
@@ -20,7 +20,7 @@ class MedsApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const MedsContainer(),
+      home: const LoginScreen(), // вместо MedsContainer
     );
   }
 }
