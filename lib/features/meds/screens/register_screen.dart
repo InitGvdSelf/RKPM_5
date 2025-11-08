@@ -1,5 +1,10 @@
+// lib/features/meds/screens/register_screen.dart
 import 'package:flutter/material.dart';
-import 'package:rkpm_5/features/meds/screens/profile_screen.dart'; // +++
+import 'package:go_router/go_router.dart';
+
+import 'package:rkpm_5/app_router.dart';                // Routes.*
+import 'package:rkpm_5/core/di.dart';                    // sl<T>()
+import 'package:rkpm_5/features/meds/state/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,11 +14,13 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _form = GlobalKey<FormState>();
+  final _form  = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _pass  = TextEditingController();
   final _name  = TextEditingController();
+
   bool _loading = false;
+  bool _obscure = true;
 
   @override
   void dispose() {
@@ -25,15 +32,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_form.currentState!.validate()) return;
+
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 500)); // имитация
+    await sl<AuthService>().signUp(
+      name: _name.text.trim(),
+      email: _email.text.trim(),
+      password: _pass.text,
+    );
     if (!mounted) return;
     setState(() => _loading = false);
 
-    // Горизонтально (замена экрана, назад вернуться нельзя):
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ProfileScreen()), // !!!
-    );
+    // После регистрации переходим в профиль (роутер сам разрулит историю)
+    context.go(Routes.profile);
   }
 
   @override
@@ -51,31 +61,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   TextFormField(
                     controller: _name,
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
                       labelText: 'Имя',
                       prefixIcon: Icon(Icons.person),
                     ),
                     validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Введите имя' : null,
+                    (v == null || v.trim().isEmpty) ? 'Введите имя' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       prefixIcon: Icon(Icons.mail),
                     ),
                     validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Введите email' : null,
+                    (v == null || v.trim().isEmpty) ? 'Введите email' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _pass,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _obscure,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _register(),
+                    decoration: InputDecoration(
                       labelText: 'Пароль',
-                      prefixIcon: Icon(Icons.lock),
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                        icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                      ),
                     ),
                     validator: (v) =>
                     (v == null || v.length < 4) ? 'Минимум 4 символа' : null,

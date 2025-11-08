@@ -1,12 +1,14 @@
+// lib/features/meds/screens/med_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+
+import 'package:rkpm_5/core/di.dart';                       // sl<T>()
 import 'package:rkpm_5/features/meds/state/image_service.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 class MedFormScreen extends StatefulWidget {
   final Medicine? existing;
-
   const MedFormScreen({super.key, this.existing});
 
   @override
@@ -16,22 +18,23 @@ class MedFormScreen extends StatefulWidget {
 class _MedFormScreenState extends State<MedFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late TextEditingController nameCtrl;
-  late TextEditingController formCtrl;
-  late TextEditingController doseCtrl;
-  late TextEditingController notesCtrl;
-  late TextEditingController imageUrlCtrl;
+  late final TextEditingController nameCtrl;
+  late final TextEditingController formCtrl;
+  late final TextEditingController doseCtrl;
+  late final TextEditingController notesCtrl;
+  late final TextEditingController imageUrlCtrl;
 
   late Schedule _schedule;
+  late final ImageService _images; // <- из DI
 
   @override
   void initState() {
     super.initState();
 
-    nameCtrl = TextEditingController(text: widget.existing?.name ?? '');
-    formCtrl = TextEditingController(text: widget.existing?.form ?? '');
-    doseCtrl = TextEditingController(text: widget.existing?.dose ?? '');
-    notesCtrl = TextEditingController(text: widget.existing?.notes ?? '');
+    nameCtrl     = TextEditingController(text: widget.existing?.name ?? '');
+    formCtrl     = TextEditingController(text: widget.existing?.form ?? '');
+    doseCtrl     = TextEditingController(text: widget.existing?.dose ?? '');
+    notesCtrl    = TextEditingController(text: widget.existing?.notes ?? '');
     imageUrlCtrl = TextEditingController(text: widget.existing?.imageUrl ?? '');
 
     _schedule = widget.existing?.schedule ??
@@ -41,7 +44,8 @@ class _MedFormScreenState extends State<MedFormScreen> {
           times: const [Clock(9, 0)],
         );
 
-    ImageService.instance.prefetchAll();
+    _images = sl<ImageService>(instanceName: 'meds'); // именованный сервис
+    _images.prefetchAll();
   }
 
   @override
@@ -57,13 +61,9 @@ class _MedFormScreenState extends State<MedFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    String? url;
+    // генерим URL: руками или берём из сервиса
     final trimmed = imageUrlCtrl.text.trim();
-    if (trimmed.isNotEmpty) {
-      url = trimmed;
-    } else {
-      url = await ImageService.instance.nextMedImage();
-    }
+    final url = trimmed.isNotEmpty ? trimmed : await _images.nextMedImage();
 
     if (widget.existing == null) {
       final med = Medicine(
@@ -80,10 +80,10 @@ class _MedFormScreenState extends State<MedFormScreen> {
     } else {
       final m = widget.existing!;
       m
-        ..name = nameCtrl.text.trim()
-        ..form = formCtrl.text.trim()
-        ..dose = doseCtrl.text.trim()
-        ..notes = notesCtrl.text.trim()
+        ..name     = nameCtrl.text.trim()
+        ..form     = formCtrl.text.trim()
+        ..dose     = doseCtrl.text.trim()
+        ..notes    = notesCtrl.text.trim()
         ..imageUrl = url
         ..schedule = _schedule;
       if (!mounted) return;
@@ -107,9 +107,7 @@ class _MedFormScreenState extends State<MedFormScreen> {
           placeholder: (_, __) => const SizedBox(
             height: 48,
             width: 48,
-            child: Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           ),
           errorWidget: (_, __, ___) => Container(
             height: 160,
@@ -145,9 +143,7 @@ class _MedFormScreenState extends State<MedFormScreen> {
             children: [
               TextFormField(
                 controller: nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Название',
-                ),
+                decoration: const InputDecoration(labelText: 'Название'),
                 validator: (v) =>
                 (v == null || v.trim().isEmpty) ? 'Укажи название' : null,
               ),
@@ -170,9 +166,7 @@ class _MedFormScreenState extends State<MedFormScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: notesCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Примечания',
-                ),
+                decoration: const InputDecoration(labelText: 'Примечания'),
                 maxLines: 3,
               ),
               const SizedBox(height: 12),
@@ -185,7 +179,6 @@ class _MedFormScreenState extends State<MedFormScreen> {
                 onChanged: (_) => setState(() {}),
               ),
               _buildPreview(),
-
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _save,

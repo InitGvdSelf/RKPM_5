@@ -1,18 +1,10 @@
+// lib/features/meds/screens/login_screen.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-// state + infra
-import 'package:rkpm_5/features/meds/state/meds_state.dart';
-
-// экраны
-import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
-import 'package:rkpm_5/features/meds/screens/today_screen.dart';
-import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
-import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
-import 'package:rkpm_5/features/meds/screens/register_screen.dart';
-// state + infra
-import 'package:rkpm_5/features/meds/state/meds_state.dart';
-import 'package:rkpm_5/features/meds/state/meds_repository.dart' as repo;
-import 'package:rkpm_5/features/meds/state/dose_scheduler.dart' as sched;
+import 'package:rkpm_5/app_router.dart';         // Routes.*
+import 'package:rkpm_5/core/di.dart';             // sl<T>()
+import 'package:rkpm_5/features/meds/state/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,74 +13,40 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _form = GlobalKey<FormState>();
+  final _form  = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _pass  = TextEditingController();
+
   bool _loading = false;
   bool _obscure = true;
 
   @override
-  void dispose() { _email.dispose(); _pass.dispose(); super.dispose(); }
+  void dispose() {
+    _email.dispose();
+    _pass.dispose();
+    super.dispose();
+  }
 
   Future<void> _login() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
 
-    final medsState = MedsState(
-      repository: repo.MedsRepository(),
-      scheduler:  sched.DoseScheduler(),
+    // --- GetIt: берём сервис аутентификации из контейнера ---
+    await sl<AuthService>().signIn(
+      email: _email.text.trim(),
+      password: _pass.text,
     );
-    await medsState.init();
 
     if (!mounted) return;
     setState(() => _loading = false);
 
-    final nav = Navigator.of(context);
-
-    nav.pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          onOpenToday: () {
-            nav.push(MaterialPageRoute(
-              builder: (_) => ScheduleScreen(
-                medicines: medsState.medicines,
-                dosesForDay: medsState.dosesForDay,
-                onMarkDose: medsState.markDose,
-                onSetDoseNote: medsState.setDoseNote,
-                fmtDate: medsState.fmtDate,
-                fmtMonth: medsState.fmtMonth,
-                fmtTime: medsState.fmtTime,
-              ),
-            ));
-          },
-          onOpenMeds: () {
-            nav.push(MaterialPageRoute(
-              builder: (_) => MedsListScreen(
-                medicines: medsState.medicines,
-                onAddMedicine: medsState.addMedicine,
-                onUpdateMedicine: medsState.updateMedicine,
-                onDeleteMedicine: medsState.deleteMedicine,
-                onRestoreMedicine: medsState.restoreMedicine,
-              ),
-            ));
-          },
-          onOpenStats: () {
-            nav.push(MaterialPageRoute(
-              builder: (_) => StatsScreen(
-                medicines: medsState.medicines,
-                doses: medsState.doses,
-              ),
-            ));
-          },
-        ),
-      ),
-    );
+    // после входа — в профиль (роутер сам решит остальное)
+    context.go(Routes.profile);
   }
 
   void _openRegister() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-    );
+    // если есть маршрут /register — откроется форма регистрации
+    context.push('/register');
   }
 
   @override
@@ -108,8 +66,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
-                        labelText: 'Email', prefixIcon: Icon(Icons.mail)),
-                    validator: (v) => (v==null||v.isEmpty) ? 'Введите email' : null,
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.mail),
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Введите email'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -119,17 +81,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       labelText: 'Пароль',
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                        icon: Icon(_obscure
+                            ? Icons.visibility
+                            : Icons.visibility_off),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
-                    validator: (v) => (v==null || v.length<4) ? 'Минимум 4 символа' : null,
+                    validator: (v) =>
+                    (v == null || v.length < 4) ? 'Минимум 4 символа' : null,
                   ),
                   const SizedBox(height: 20),
                   FilledButton.icon(
                     onPressed: _loading ? null : _login,
                     icon: _loading
-                        ? const SizedBox(height:18,width:18,child: CircularProgressIndicator(strokeWidth:2))
+                        ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                         : const Icon(Icons.login),
                     label: const Text('Войти'),
                   ),

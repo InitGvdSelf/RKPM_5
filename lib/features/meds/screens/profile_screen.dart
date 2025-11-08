@@ -1,24 +1,17 @@
+// lib/features/meds/screens/profile_screen.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import 'package:rkpm_5/features/meds/models/profile.dart';
-import 'package:rkpm_5/features/meds/state/profile_storage.dart';
+import 'package:rkpm_5/app_router.dart';                 // Routes.*
+import 'package:rkpm_5/core/di.dart';                     // sl<T>()
 import 'package:rkpm_5/features/meds/state/image_service.dart';
-
-import 'package:rkpm_5/features/meds/screens/login_screen.dart';
+import 'package:rkpm_5/features/meds/state/auth_service.dart';
+import 'package:rkpm_5/features/meds/state/profile_storage.dart';
+import 'package:rkpm_5/features/meds/models/profile.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({
-    super.key,
-    this.onOpenToday,
-    this.onOpenMeds,
-    this.onOpenStats,
-  });
-
-  /// Вертикальные переходы (Navigator.push) — задаются снаружи.
-  final VoidCallback? onOpenToday;
-  final VoidCallback? onOpenMeds;
-  final VoidCallback? onOpenStats;
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -27,14 +20,13 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late final TextEditingController nameCtrl;
   late final TextEditingController ageCtrl;
-
   Profile? profile;
 
   @override
   void initState() {
     super.initState();
     nameCtrl = TextEditingController();
-    ageCtrl = TextEditingController();
+    ageCtrl  = TextEditingController();
     _load();
   }
 
@@ -43,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       profile = stored ?? Profile(name: '', age: 0, avatarUrl: null);
       nameCtrl.text = profile!.name;
-      ageCtrl.text = profile!.age > 0 ? profile!.age.toString() : '';
+      ageCtrl.text  = profile!.age > 0 ? profile!.age.toString() : '';
     });
   }
 
@@ -56,12 +48,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await ProfileStorage.save(updated);
     if (!mounted) return;
     setState(() => profile = updated);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Профиль сохранён')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Профиль сохранён')),
+    );
   }
 
   Future<void> _changeAvatar() async {
-    final url = await ImageService.instance.nextAvatarImage();
+    final avatars = sl<ImageService>(instanceName: 'avatars');
+    final url = await avatars.nextAvatarImage();
     final updated = Profile(
       name: nameCtrl.text.trim(),
       age: int.tryParse(ageCtrl.text.trim()) ?? 0,
@@ -72,11 +66,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => profile = updated);
   }
 
-  /// Горизонтальная навигация (замена экрана) — назад вернуться нельзя.
-  void _signOut() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+  Future<void> _signOut() async {
+    await sl<AuthService>().signOut();
+    if (!mounted) return;
+    context.go(Routes.login);
   }
 
   @override
@@ -89,6 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final avatarUrl = profile?.avatarUrl;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Профиль')),
@@ -124,10 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 24),
 
           // Поля профиля
-          TextField(
-            controller: nameCtrl,
-            decoration: const InputDecoration(labelText: 'Имя'),
-          ),
+          TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Имя')),
           const SizedBox(height: 12),
           TextField(
             controller: ageCtrl,
@@ -135,34 +126,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: _save,
-            icon: const Icon(Icons.save),
-            label: const Text('Сохранить'),
-          ),
+          FilledButton.icon(onPressed: _save, icon: const Icon(Icons.save), label: const Text('Сохранить')),
 
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 12),
 
-          // Кнопки вертикальной навигации (push / pop)
-          Text('Разделы', style: Theme.of(context).textTheme.titleMedium),
+          Text('Разделы', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
 
+          // Переходы через go_router по именованным путям
           FilledButton.tonalIcon(
-            onPressed: widget.onOpenToday,
+            onPressed: () => context.push(Routes.schedule),
             icon: const Icon(Icons.calendar_today),
             label: const Text('Расписание'),
           ),
           const SizedBox(height: 8),
           FilledButton.tonalIcon(
-            onPressed: widget.onOpenMeds,
+            onPressed: () => context.push(Routes.meds),
             icon: const Icon(Icons.medication),
             label: const Text('Лекарства'),
           ),
           const SizedBox(height: 8),
           FilledButton.tonalIcon(
-            onPressed: widget.onOpenStats,
+            onPressed: () => context.push(Routes.stats),
             icon: const Icon(Icons.query_stats),
             label: const Text('Статистика'),
           ),
@@ -171,7 +158,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Divider(),
           const SizedBox(height: 12),
 
-          // Выход (горизонтальная навигация pushReplacement)
           FilledButton.icon(
             onPressed: _signOut,
             icon: const Icon(Icons.logout),

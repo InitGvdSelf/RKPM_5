@@ -1,25 +1,11 @@
+// lib/features/meds/screens/today_screen.dart
 import 'package:flutter/material.dart';
-import 'package:rkpm_5/features/meds/models/medicine.dart';
+import 'package:rkpm_5/core/di.dart';                         // sl<T>()
+import 'package:rkpm_5/features/meds/state/meds_state.dart'; // fmt*, markDose, setDoseNote, data
+import 'package:rkpm_5/features/meds/models/medicine.dart';  // DoseEntry, DoseStatus
 
 class ScheduleScreen extends StatefulWidget {
-  final List<Medicine> medicines;
-  final List<DoseEntry> Function(DateTime day) dosesForDay;
-  final void Function(String doseId, DoseStatus status) onMarkDose;
-  final void Function(String doseId, String note) onSetDoseNote;
-  final String Function(DateTime) fmtDate;
-  final String Function(DateTime) fmtMonth;
-  final String Function(DateTime) fmtTime;
-
-  const ScheduleScreen({
-    super.key,
-    required this.medicines,
-    required this.dosesForDay,
-    required this.onMarkDose,
-    required this.onSetDoseNote,
-    required this.fmtDate,
-    required this.fmtMonth,
-    required this.fmtTime,
-  });
+  const ScheduleScreen({super.key});
 
   @override
   State<ScheduleScreen> createState() => _ScheduleScreenState();
@@ -37,8 +23,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final items = widget
-        .dosesForDay(selected)
+    final state = sl<MedsState>(); // <- всё из DI
+
+    // список доз на выбранный день
+    final items = List<DoseEntry>.from(state.dosesForDay(selected))
       ..sort((a, b) => a.plannedAt.compareTo(b.plannedAt));
 
     return Scaffold(
@@ -52,7 +40,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.fmtMonth(selected),
+                    state.fmtMonth(selected),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -79,7 +67,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             ),
           ),
 
-          // Сам календарь — теперь внутри Scaffold (Material)
+          // Календарь
           CalendarDatePicker(
             initialDate: selected,
             firstDate: DateTime(selected.year - 1),
@@ -89,13 +77,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 setState(() => selected = DateTime(d.year, d.month, d.day)),
           ),
 
-          // Дата строки и список приёмов
+          // Дата и список приёмов
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                widget.fmtDate(selected),
+                state.fmtDate(selected),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
@@ -109,11 +97,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               itemCount: items.length,
               itemBuilder: (context, i) {
                 final d = items[i];
-                final m =
-                widget.medicines.firstWhere((e) => e.id == d.medicineId);
+                final m = state.medicines.firstWhere((e) => e.id == d.medicineId);
                 final color = switch (d.status) {
                   DoseStatus.pending => Colors.orange,
-                  DoseStatus.taken => Colors.green,
+                  DoseStatus.taken   => Colors.green,
                   DoseStatus.skipped => Colors.red,
                 };
                 return Card(
@@ -123,13 +110,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       child: const Icon(Icons.medication, color: Colors.white),
                     ),
                     title: Text(m.name),
-                    subtitle:
-                    Text('${m.dose} • ${m.form} • ${widget.fmtTime(d.plannedAt)}'),
+                    subtitle: Text('${m.dose} • ${m.form} • ${state.fmtTime(d.plannedAt)}'),
                     trailing: PopupMenuButton<String>(
                       onSelected: (v) {
-                        if (v == 'take') widget.onMarkDose(d.id, DoseStatus.taken);
-                        if (v == 'skip') widget.onMarkDose(d.id, DoseStatus.skipped);
+                        if (v == 'take') state.markDose(d.id, DoseStatus.taken);
+                        if (v == 'skip') state.markDose(d.id, DoseStatus.skipped);
                         if (v == 'note') _editNote(context, d.id, d.note);
+                        setState(() {}); // обновить UI сразу
                       },
                       itemBuilder: (c) => const [
                         PopupMenuItem(value: 'take', child: Text('Принято')),
@@ -148,6 +135,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   void _editNote(BuildContext context, String doseId, String initial) async {
+    final state = sl<MedsState>();
     final ctrl = TextEditingController(text: initial);
     await showDialog(
       context: context,
@@ -158,8 +146,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           TextButton(onPressed: () => Navigator.pop(c), child: const Text('Отмена')),
           FilledButton(
             onPressed: () {
-              widget.onSetDoseNote(doseId, ctrl.text.trim());
+              state.setDoseNote(doseId, ctrl.text.trim());
               Navigator.pop(c);
+              setState(() {});
             },
             child: const Text('Сохранить'),
           ),
