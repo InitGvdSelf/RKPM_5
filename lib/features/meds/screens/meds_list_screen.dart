@@ -1,24 +1,13 @@
+// lib/features/meds/screens/meds_list_screen.dart
 import 'package:flutter/material.dart';
+import 'package:rkpm_5/core/app_dependencies.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 import 'package:rkpm_5/features/meds/screens/med_form_screen.dart';
 import 'package:rkpm_5/features/meds/widgets/med_tile.dart';
 import 'package:rkpm_5/shared/widgets/empty_state.dart';
 
 class MedsListScreen extends StatefulWidget {
-  final List<Medicine> medicines;
-  final void Function(Medicine) onAddMedicine;
-  final void Function(Medicine) onUpdateMedicine;
-  final Medicine? Function(String id) onDeleteMedicine;
-  final void Function(Medicine) onRestoreMedicine;
-
-  const MedsListScreen({
-    super.key,
-    required this.medicines,
-    required this.onAddMedicine,
-    required this.onUpdateMedicine,
-    required this.onDeleteMedicine,
-    required this.onRestoreMedicine,
-  });
+  const MedsListScreen({super.key});
 
   @override
   State<MedsListScreen> createState() => _MedsListScreenState();
@@ -26,28 +15,35 @@ class MedsListScreen extends StatefulWidget {
 
 class _MedsListScreenState extends State<MedsListScreen> {
   Future<void> _add() async {
+    FocusScope.of(context).unfocus();
+
     final created = await Navigator.of(context).push<Medicine>(
       MaterialPageRoute(builder: (_) => const MedFormScreen()),
     );
-    if (created != null) {
-      widget.onAddMedicine(created);
-      setState(() {});
-    }
+    if (!mounted || created == null) return;
+
+    final state = AppDependencies.of(context).state;
+    state.addMedicine(created);
+    setState(() {});
   }
 
   Future<void> _edit(Medicine m) async {
+    FocusScope.of(context).unfocus();
+
     final updated = await Navigator.of(context).push<Medicine>(
       MaterialPageRoute(builder: (_) => MedFormScreen(existing: m)),
     );
-    if (updated != null) {
-      widget.onUpdateMedicine(updated);
-      setState(() {});
-    }
+    if (!mounted || updated == null) return;
+
+    final state = AppDependencies.of(context).state;
+    state.updateMedicine(updated);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final meds = widget.medicines;
+    final state = AppDependencies.of(context).state;
+    final meds = state.medicines;
     final hasMeds = meds.isNotEmpty;
 
     return Scaffold(
@@ -83,15 +79,14 @@ class _MedsListScreenState extends State<MedsListScreen> {
                 return ok ?? false;
               },
               onDismissed: (_) {
-                final removed = widget.onDeleteMedicine(m.id);
-                if (removed != null) {
+                final removed = state.deleteMedicine(m.id);
+                if (removed != null && mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Удалено: ${removed.name}'),
                       action: SnackBarAction(
                         label: 'Отмена',
-                        onPressed: () =>
-                            widget.onRestoreMedicine(removed),
+                        onPressed: () => state.restoreMedicine(removed),
                       ),
                     ),
                   );
@@ -116,7 +111,6 @@ class _MedsListScreenState extends State<MedsListScreen> {
           ),
         ),
       ),
-      // Показываем широкую кнопку снизу ТОЛЬКО если список не пуст
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: hasMeds
           ? Padding(

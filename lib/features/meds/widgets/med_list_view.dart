@@ -1,26 +1,25 @@
-import 'package:flutter/material.dart';
-import 'package:rkpm_5/features/meds/models/medicine.dart';
-import 'package:rkpm_5/features/meds/widgets/med_tile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rkpm_5/features/meds/models/profile.dart';
 
-class MedListView extends StatelessWidget {
-  final List<Medicine> items;
-  final ValueChanged<Medicine> onTap;
-  final DismissDirectionCallback? onDismiss;
-  const MedListView({super.key, required this.items, required this.onTap, this.onDismiss});
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: items.length,
-      itemBuilder: (context, i) {
-        final m = items[i];
-        return Dismissible(
-          key: ValueKey(m.id),
-          background: Container(color: Colors.red),
-          onDismissed: onDismiss,
-          child: MedTile(med: m, onTap: () => onTap(m)),
-        );
-      },
-    );
+class ProfileStorage {
+  static const _key = 'user_profile_v1';
+
+  const ProfileStorage();
+
+  Future<void> save(Profile p) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setString(_key, p.toJsonString());
+  }
+
+  Future<Profile?> load() async {
+    final sp = await SharedPreferences.getInstance();
+    final data = sp.getString(_key);
+    if (data == null || data.isEmpty) return null;
+    return Profile.fromJsonString(data);
+  }
+
+  Future<void> clear() async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove(_key);
   }
 }

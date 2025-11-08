@@ -1,7 +1,8 @@
+// lib/features/meds/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rkpm_5/app_router.dart';
-import 'package:rkpm_5/features/meds/state/auth_service.dart';
+import 'package:rkpm_5/core/app_dependencies.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,18 +18,25 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
 
   @override
-  void dispose() { _email.dispose(); _pass.dispose(); super.dispose(); }
+  void dispose() {
+    _email.dispose();
+    _pass.dispose();
+    super.dispose();
+  }
 
   Future<void> _login() async {
     if (!_form.currentState!.validate()) return;
+
     setState(() => _loading = true);
-    await AuthService.instance.signIn(email: _email.text.trim(), password: _pass.text);
+    final auth = AppDependencies.of(context).auth; // <- через InheritedWidget
+    await auth.signIn(email: _email.text.trim(), password: _pass.text);
+
     if (!mounted) return;
     setState(() => _loading = false);
-    context.go(Routes.profile); // замена pushReplacement на router
+    context.go(Routes.profile); // переход на профиль после логина
   }
 
-  void _openRegister() => context.push('/register'); // если есть экран регистрации в роутере
+  void _openRegister() => context.push('/register'); // если есть такой роут
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +54,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail)),
-                    validator: (v) => (v==null||v.isEmpty) ? 'Введите email' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.mail),
+                    ),
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? 'Введите email'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -61,13 +74,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
-                    validator: (v) => (v==null || v.length<4) ? 'Минимум 4 символа' : null,
+                    validator: (v) =>
+                    (v == null || v.length < 4) ? 'Минимум 4 символа' : null,
                   ),
                   const SizedBox(height: 20),
                   FilledButton.icon(
                     onPressed: _loading ? null : _login,
                     icon: _loading
-                        ? const SizedBox(height:18,width:18,child: CircularProgressIndicator(strokeWidth:2))
+                        ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                         : const Icon(Icons.login),
                     label: const Text('Войти'),
                   ),

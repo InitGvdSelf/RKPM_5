@@ -1,90 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:rkpm_5/features/meds/models/medicine.dart';
-import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
-import 'package:rkpm_5/features/meds/screens/today_screen.dart';
-import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
-import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rkpm_5/app_router.dart'; // тут лежат имена маршрутов (Routes.*)
 
+/// Домашний экран-хаб: кнопки дергают именованные маршруты.
+/// Состояние и сервисы пробрасываются внутри конфигурации go_router,
+/// а не через конструкторы экранов здесь.
 class MedsHomeScreen extends StatelessWidget {
-  final List<Medicine> medicines;
-  final List<DoseEntry> doses;
-  final List<DoseEntry> Function(DateTime) dosesForDay;
-  final void Function(Medicine) onAddMedicine;
-  final void Function(Medicine) onUpdateMedicine;
-  final Medicine? Function(String) onDeleteMedicine;
-  final void Function(Medicine) onRestoreMedicine;
-  final void Function(String, DoseStatus) onMarkDose;
-  final void Function(String, String) onSetDoseNote;
-  final String Function(DateTime) fmtDate;
-  final String Function(DateTime) fmtMonth;
-  final String Function(DateTime) fmtTime;
+  const MedsHomeScreen({super.key});
 
-  const MedsHomeScreen({
-    super.key,
-    required this.medicines,
-    required this.doses,
-    required this.dosesForDay,
-    required this.onAddMedicine,
-    required this.onUpdateMedicine,
-    required this.onDeleteMedicine,
-    required this.onRestoreMedicine,
-    required this.onMarkDose,
-    required this.onSetDoseNote,
-    required this.fmtDate,
-    required this.fmtMonth,
-    required this.fmtTime,
-  });
-
-  void _openSchedule(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ScheduleScreen(
-          medicines: medicines,
-          dosesForDay: dosesForDay,
-          onMarkDose: onMarkDose,
-          onSetDoseNote: onSetDoseNote,
-          fmtDate: fmtDate,
-          fmtMonth: fmtMonth,
-          fmtTime: fmtTime,
-        ),
-      ),
-    );
-  }
-
-  void _openMeds(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MedsListScreen(
-          medicines: medicines,
-          onAddMedicine: onAddMedicine,
-          onUpdateMedicine: onUpdateMedicine,
-          onDeleteMedicine: onDeleteMedicine,
-          onRestoreMedicine: onRestoreMedicine,
-        ),
-      ),
-    );
-  }
-
-  void _openStats(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => StatsScreen(
-          medicines: medicines,
-          doses: doses,
-        ),
-      ),
-    );
-  }
-
-  void _openProfile(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
-    );
-  }
+  void _openSchedule(BuildContext context) => context.pushNamed(Routes.schedule);
+  void _openMeds(BuildContext context)     => context.pushNamed(Routes.meds);
+  void _openStats(BuildContext context)    => context.pushNamed(Routes.stats);
+  void _openProfile(BuildContext context)  => context.pushNamed(Routes.profile);
 
   @override
   Widget build(BuildContext context) {

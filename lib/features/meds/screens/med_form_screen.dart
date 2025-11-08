@@ -1,7 +1,11 @@
+// lib/features/meds/screens/med_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:rkpm_5/features/meds/state/image_service.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:rkpm_5/core/app_dependencies.dart';
+import 'package:rkpm_5/features/meds/state/image_service.dart'; // для типа
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 class MedFormScreen extends StatefulWidget {
@@ -16,13 +20,17 @@ class MedFormScreen extends StatefulWidget {
 class _MedFormScreenState extends State<MedFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late TextEditingController nameCtrl;
-  late TextEditingController formCtrl;
-  late TextEditingController doseCtrl;
-  late TextEditingController notesCtrl;
-  late TextEditingController imageUrlCtrl;
+  late final TextEditingController nameCtrl;
+  late final TextEditingController formCtrl;
+  late final TextEditingController doseCtrl;
+  late final TextEditingController notesCtrl;
+  late final TextEditingController imageUrlCtrl;
 
   late Schedule _schedule;
+
+  // зависимости из провайдера
+  late ImageService _images;
+  bool _imagesPrefetched = false;
 
   @override
   void initState() {
@@ -33,14 +41,24 @@ class _MedFormScreenState extends State<MedFormScreen> {
     doseCtrl = TextEditingController(text: widget.existing?.dose ?? '');
     notesCtrl = TextEditingController(text: widget.existing?.notes ?? '');
     imageUrlCtrl = TextEditingController(text: widget.existing?.imageUrl ?? '');
+
     _schedule = widget.existing?.schedule ??
         Schedule.weekly(
           active: true,
           daysOfWeek: {1, 2, 3, 4, 5, 6, 7}, // каждый день недели
           times: const [Clock(9, 0)],
         );
+  }
 
-    ImageService.instance.prefetchAll();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // получаем через InheritedWidget
+    _images = AppDependencies.of(context).images;
+    if (!_imagesPrefetched) {
+      _images.prefetchAll();
+      _imagesPrefetched = true;
+    }
   }
 
   @override
@@ -56,12 +74,15 @@ class _MedFormScreenState extends State<MedFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // спрячем клавиатуру
+    FocusScope.of(context).unfocus();
+
     String? url;
     final trimmed = imageUrlCtrl.text.trim();
     if (trimmed.isNotEmpty) {
       url = trimmed;
     } else {
-      url = await ImageService.instance.nextMedImage();
+      url = await _images.nextMedImage(); // <- берём из провайдера
     }
 
     if (widget.existing == null) {
@@ -75,7 +96,7 @@ class _MedFormScreenState extends State<MedFormScreen> {
         schedule: _schedule,
       );
       if (!mounted) return;
-      Navigator.of(context).pop(med);
+      context.pop(med);
     } else {
       final m = widget.existing!;
       m
@@ -86,7 +107,7 @@ class _MedFormScreenState extends State<MedFormScreen> {
         ..imageUrl = url
         ..schedule = _schedule;
       if (!mounted) return;
-      Navigator.of(context).pop(m);
+      context.pop(m);
     }
   }
 
@@ -181,10 +202,9 @@ class _MedFormScreenState extends State<MedFormScreen> {
                   labelText: 'URL изображения (необязательно)',
                   hintText: 'https://...',
                 ),
-                onChanged: (_) => setState(() {}),
+                onChanged: (_) => setState(() {}), // обновляем превью
               ),
               _buildPreview(),
-
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _save,

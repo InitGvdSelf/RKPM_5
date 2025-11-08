@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:rkpm_5/features/meds/state/meds_state.dart';
+import 'package:rkpm_5/features/meds/state/auth_service.dart';
+
 import 'package:rkpm_5/features/meds/screens/login_screen.dart';
 import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
 import 'package:rkpm_5/features/meds/screens/today_screen.dart';
 import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
 import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
-import 'package:rkpm_5/features/meds/state/auth_service.dart';
 
 abstract class Routes {
   static const login    = '/login';
@@ -20,6 +21,7 @@ abstract class Routes {
 
 class AppRouter {
   final MedsState state;
+  late final GoRouter router;
 
   AppRouter(this.state) {
     router = GoRouter(
@@ -36,56 +38,32 @@ class AppRouter {
         GoRoute(
           path: Routes.login,
           name: 'login',
-          builder: (_, __) => const LoginScreen(),
+          builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
           path: Routes.profile,
           name: 'profile',
-          builder: (ctx, __) => ProfileScreen(
-            onOpenToday: () => ctx.pushNamed('schedule'),
-            onOpenMeds:  () => ctx.pushNamed('meds'),
-            onOpenStats: () => ctx.pushNamed('stats'),
-          ),
+          builder: (context, state) => const ProfileScreen(),
         ),
         GoRoute(
           path: Routes.schedule,
           name: 'schedule',
-          builder: (_, __) {
-            state.ensureFutureDoses();
-
-            return ScheduleScreen(
-              medicines: state.medicines,
-              dosesForDay: state.dosesForDay,
-              onMarkDose: state.markDose,
-              onSetDoseNote: state.setDoseNote,
-              fmtDate: state.fmtDate,
-              fmtMonth: state.fmtMonth,
-              fmtTime: state.fmtTime,
-            );
+          builder: (context, stateGo) {
+            this.state.ensureFutureDoses();
+            return const ScheduleScreen();
           },
         ),
         GoRoute(
           path: Routes.meds,
           name: 'meds',
-          builder: (_, __) => MedsListScreen(
-            medicines: state.medicines,
-            onAddMedicine: state.addMedicine,
-            onUpdateMedicine: state.updateMedicine,
-            onDeleteMedicine: state.deleteMedicine,
-            onRestoreMedicine: state.restoreMedicine,
-          ),
+          builder: (context, state) => const MedsListScreen(),
         ),
         GoRoute(
           path: Routes.stats,
           name: 'stats',
-          builder: (_, __) => StatsScreen(
-            medicines: state.medicines,
-            doses: state.doses,
-          ),
+          builder: (context, state) => const StatsScreen(),
         ),
       ],
     );
   }
-
-  late final GoRouter router;
 }

@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
@@ -17,82 +18,99 @@ class MedsState extends ChangeNotifier {
   bool _loaded = false;
   bool get loaded => _loaded;
 
-  List<Medicine> medicines = [];
-  List<DoseEntry> doses = [];
+  // Храним как обычные списки, наружу отдаём read-only
+  List<Medicine> _medicines = [];
+  List<DoseEntry> _doses = [];
+
+  UnmodifiableListView<Medicine> get medicines =>
+      UnmodifiableListView(_medicines);
+  UnmodifiableListView<DoseEntry> get doses =>
+      UnmodifiableListView(_doses);
 
   Future<void> init() async {
-    medicines = await repository.loadMeds();
-    doses     = await repository.loadDoses();
-    scheduler.ensureFutureDoses(medicines, doses);
+    _medicines = await repository.loadMeds();
+    _doses     = await repository.loadDoses();
+
+    // Генерируем будущие дозы и сразу сохраняем изменения.
+    final beforeLen = _doses.length;
+    scheduler.ensureFutureDoses(_medicines, _doses);
+    if (_doses.length != beforeLen) {
+      await repository.save(_medicines, _doses);
+    }
+
     _loaded = true;
     notifyListeners();
   }
 
   Future<void> _persist() async {
-    await repository.save(medicines, doses);
+    await repository.save(_medicines, _doses);
     notifyListeners();
   }
 
   // ---- CRUD по лекарствам ----
   void addMedicine(Medicine m) {
-    medicines.add(m);
-    scheduler.ensureFutureDoses(medicines, doses);
+    _medicines.add(m);
+    scheduler.ensureFutureDoses(_medicines, _doses);
     _persist();
   }
 
   void updateMedicine(Medicine m) {
-    final i = medicines.indexWhere((e) => e.id == m.id);
+    final i = _medicines.indexWhere((e) => e.id == m.id);
     if (i >= 0) {
-      medicines[i] = m;
+      _medicines[i] = m;
+
       // Пересобираем будущие дозы для этого лекарства
-      doses.removeWhere((e) =>
+      _doses.removeWhere((e) =>
       e.medicineId == m.id &&
           e.plannedAt.isAfter(DateTime.now()) &&
           e.status == DoseStatus.pending);
-      scheduler.ensureFutureDoses(medicines, doses);
+
+      scheduler.ensureFutureDoses(_medicines, _doses);
       _persist();
     }
   }
 
   Medicine? deleteMedicine(String id) {
-    final i = medicines.indexWhere((e) => e.id == id);
+    final i = _medicines.indexWhere((e) => e.id == id);
     if (i < 0) return null;
-    final removed = medicines.removeAt(i);
-    doses.removeWhere((e) => e.medicineId == id);
+    final removed = _medicines.removeAt(i);
+    _doses.removeWhere((e) => e.medicineId == id);
     _persist();
     return removed;
   }
 
   void restoreMedicine(Medicine m) {
-    medicines.add(m);
-    scheduler.ensureFutureDoses(medicines, doses);
+    _medicines.add(m);
+    scheduler.ensureFutureDoses(_medicines, _doses);
     _persist();
   }
 
   // ---- Дозы ----
   void markDose(String doseId, DoseStatus status) {
-    final i = doses.indexWhere((e) => e.id == doseId);
+    final i = _doses.indexWhere((e) => e.id == doseId);
     if (i < 0) return;
-    doses[i] = DoseEntry(
-      id: doses[i].id,
-      medicineId: doses[i].medicineId,
-      plannedAt: doses[i].plannedAt,
+    final d = _doses[i];
+    _doses[i] = DoseEntry(
+      id: d.id,
+      medicineId: d.medicineId,
+      plannedAt: d.plannedAt,
       status: status,
       factAt: DateTime.now(),
-      note: doses[i].note,
+      note: d.note,
     );
     _persist();
   }
 
   void setDoseNote(String doseId, String note) {
-    final i = doses.indexWhere((e) => e.id == doseId);
+    final i = _doses.indexWhere((e) => e.id == doseId);
     if (i < 0) return;
-    doses[i] = DoseEntry(
-      id: doses[i].id,
-      medicineId: doses[i].medicineId,
-      plannedAt: doses[i].plannedAt,
-      status: doses[i].status,
-      factAt: doses[i].factAt,
+    final d = _doses[i];
+    _doses[i] = DoseEntry(
+      id: d.id,
+      medicineId: d.medicineId,
+      plannedAt: d.plannedAt,
+      status: d.status,
+      factAt: d.factAt,
       note: note,
     );
     _persist();
@@ -101,15 +119,21 @@ class MedsState extends ChangeNotifier {
   List<DoseEntry> dosesForDay(DateTime day) {
     final start = DateTime(day.year, day.month, day.day);
     final end   = start.add(const Duration(days: 1));
-    return doses.where((d) => !d.plannedAt.isBefore(start) && d.plannedAt.isBefore(end)).toList();
+    final list = _doses.where(
+          (d) => !d.plannedAt.isBefore(start) && d.plannedAt.isBefore(end),
+    ).toList()
+      ..sort((a, b) => a.plannedAt.compareTo(b.plannedAt));
+    return list;
   }
 
   // ---- Форматирование дат ----
   String fmtDate (DateTime d) => DateFormat('dd.MM.yyyy', 'ru').format(d);
   String fmtMonth(DateTime d) => DateFormat('LLLL yyyy', 'ru').format(d);
   String fmtTime (DateTime d) => DateFormat('HH:mm', 'ru').format(d);
+
+  /// Явный ручной вызов пересборки будущих доз + сохранение.
   void ensureFutureDoses() {
-    scheduler.ensureFutureDoses(medicines, doses);
-    notifyListeners();
+    scheduler.ensureFutureDoses(_medicines, _doses);
+    _persist();
   }
 }

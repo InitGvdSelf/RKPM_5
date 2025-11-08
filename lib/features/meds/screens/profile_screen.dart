@@ -1,12 +1,13 @@
+// lib/features/meds/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:rkpm_5/app_router.dart';
+import 'package:rkpm_5/core/app_dependencies.dart';
+
 import 'package:rkpm_5/features/meds/models/profile.dart';
 import 'package:rkpm_5/features/meds/state/profile_storage.dart';
-import 'package:rkpm_5/features/meds/state/image_service.dart';
-import 'package:rkpm_5/features/meds/state/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -33,16 +34,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     nameCtrl = TextEditingController();
-    ageCtrl = TextEditingController();
+    ageCtrl  = TextEditingController();
     _load();
   }
 
   Future<void> _load() async {
     final stored = await ProfileStorage.load();
+    if (!mounted) return;
     setState(() {
       profile = stored ?? Profile(name: '', age: 0, avatarUrl: null);
       nameCtrl.text = profile!.name;
-      ageCtrl.text = profile!.age > 0 ? profile!.age.toString() : '';
+      ageCtrl.text  = profile!.age > 0 ? profile!.age.toString() : '';
     });
   }
 
@@ -55,12 +57,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await ProfileStorage.save(updated);
     if (!mounted) return;
     setState(() => profile = updated);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Профиль сохранён')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Профиль сохранён')),
+    );
   }
 
   Future<void> _changeAvatar() async {
-    final url = await ImageService.instance.nextAvatarImage();
+    final images = AppDependencies.of(context).images; // через провайдер
+    final url = await images.nextAvatarImage();
     final updated = Profile(
       name: nameCtrl.text.trim(),
       age: int.tryParse(ageCtrl.text.trim()) ?? 0,
@@ -71,9 +75,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => profile = updated);
   }
 
-  /// Горизонтальный выход с очисткой данных
   Future<void> _signOut() async {
-    await AuthService.instance.signOut();
+    final auth = AppDependencies.of(context).auth; // через провайдер
+    await auth.signOut();
     if (!mounted) return;
     context.go(Routes.login);
   }
@@ -95,7 +99,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // --- Аватар ---
           Center(
             child: GestureDetector(
               onTap: _changeAvatar,
@@ -111,8 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fit: BoxFit.cover,
                     placeholder: (_, __) => const Padding(
                       padding: EdgeInsets.all(12),
-                      child:
-                      CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                     errorWidget: (_, __, ___) =>
                     const Icon(Icons.person, size: 60),
@@ -123,8 +125,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // --- Поля профиля ---
           TextField(
             controller: nameCtrl,
             decoration: const InputDecoration(labelText: 'Имя'),
@@ -146,27 +146,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Divider(),
           const SizedBox(height: 12),
 
-          // --- Навигация ---
           Text('Разделы', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
 
           FilledButton.tonalIcon(
-            onPressed:
-            widget.onOpenToday ?? () => context.push(Routes.schedule),
+            onPressed: widget.onOpenToday ?? () => context.push(Routes.schedule),
             icon: const Icon(Icons.calendar_today),
             label: const Text('Расписание'),
           ),
           const SizedBox(height: 8),
           FilledButton.tonalIcon(
-            onPressed:
-            widget.onOpenMeds ?? () => context.push(Routes.meds),
+            onPressed: widget.onOpenMeds ?? () => context.push(Routes.meds),
             icon: const Icon(Icons.medication),
             label: const Text('Лекарства'),
           ),
           const SizedBox(height: 8),
           FilledButton.tonalIcon(
-            onPressed:
-            widget.onOpenStats ?? () => context.push(Routes.stats),
+            onPressed: widget.onOpenStats ?? () => context.push(Routes.stats),
             icon: const Icon(Icons.query_stats),
             label: const Text('Статистика'),
           ),
@@ -175,7 +171,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Divider(),
           const SizedBox(height: 12),
 
-          // --- Выход ---
           FilledButton.icon(
             onPressed: _signOut,
             icon: const Icon(Icons.logout),
