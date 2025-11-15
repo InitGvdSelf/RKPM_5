@@ -13,6 +13,8 @@ dependencies:
   go_router: ^14.2.0
   flutter_localizations:
     sdk: flutter
+  mobx: ^2.3.0
+  flutter_mobx: ^2.2.0
 
 
   cached_network_image: ^3.3.1
@@ -23,5 +25,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  build_runner: ^2.4.6
+  riverpod_generator: ^2.3.5
+  mobx_codegen: ^2.6.0
 flutter:
   uses-material-design: true
