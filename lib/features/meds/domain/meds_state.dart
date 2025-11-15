@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
 import 'package:rkpm_5/features/meds/models/medicine.dart';
-import 'package:rkpm_5/features/meds/state/meds_repository.dart';
-import 'package:rkpm_5/features/meds/state/dose_scheduler.dart';
+import 'package:rkpm_5/features/meds/domain/meds_repository.dart';
+import 'package:rkpm_5/features/meds/domain/dose_scheduler.dart';
 
 class MedsState extends ChangeNotifier {
   final MedsRepository repository;

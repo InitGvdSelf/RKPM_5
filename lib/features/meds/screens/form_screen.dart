@@ -1,11 +1,11 @@
-// lib/features/meds/screens/med_form_screen.dart
+// lib/features/meds/screens/form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:rkpm_5/core/app_dependencies.dart';
-import 'package:rkpm_5/features/meds/state/image_service.dart'; // для типа
+import 'package:rkpm_5/features/meds/domain/image_service.dart'; // для типа
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 class MedFormScreen extends StatefulWidget {

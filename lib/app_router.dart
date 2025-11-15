@@ -2,18 +2,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:rkpm_5/features/meds/state/meds_state.dart';
-import 'package:rkpm_5/features/meds/state/auth_service.dart';
+import 'package:rkpm_5/features/meds/domain/meds_state.dart';
+import 'package:rkpm_5/features/meds/domain/auth_service.dart';
 
 import 'package:rkpm_5/features/meds/screens/login_screen.dart';
 import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
-import 'package:rkpm_5/features/meds/screens/today_screen.dart';
-import 'package:rkpm_5/features/meds/screens/meds_list_screen.dart';
+import 'package:rkpm_5/features/meds/screens/schedule_screen.dart';
+import 'package:rkpm_5/features/meds/screens/list_screen.dart';
 import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
+
+import 'features/meds/screens/register_screen.dart';
 
 abstract class Routes {
   static const login    = '/login';
   static const profile  = '/profile';
+  static const register = '/register';
   static const schedule = '/schedule';
   static const meds     = '/meds';
   static const stats    = '/stats';
@@ -44,6 +47,10 @@ class AppRouter {
           path: Routes.profile,
           name: 'profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: Routes.register,
+          builder: (context, state) => const RegisterScreen(),
         ),
         GoRoute(
           path: Routes.schedule,
