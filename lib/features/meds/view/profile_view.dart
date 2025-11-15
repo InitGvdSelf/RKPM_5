@@ -82,7 +82,6 @@ class _ProfileViewState extends State<ProfileView> {
 
     return BlocConsumer<ProfileCubit, ProfileState>(
       listener: (context, state) {
-        // один раз инициализируем контроллеры, когда профиль загрузился
         if (!_initializedFromState && state.profile != null) {
           _initializedFromState = true;
           final p = state.profile!;

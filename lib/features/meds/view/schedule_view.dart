@@ -12,14 +12,12 @@ class ScheduleView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // берём MedsState через кубит, чтобы не тянуть AppDependencies в UI
     final medsState = context.read<ScheduleCubit>().medsState;
 
     return BlocBuilder<ScheduleCubit, ScheduleState>(
       builder: (context, scheduleState) {
         final selected = scheduleState.selectedDate;
 
-        // реальные типы: DoseEntry и DoseStatus из medicine.dart
         final items = List<DoseEntry>.from(
           medsState.dosesForDay(selected),
         )..sort((a, b) => a.plannedAt.compareTo(b.plannedAt));
@@ -28,7 +26,6 @@ class ScheduleView extends StatelessWidget {
           appBar: AppBar(title: const Text('Расписание')),
           body: Column(
             children: [
-              // Заголовок месяца + кнопки навигации
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
                 child: Row(
@@ -58,7 +55,6 @@ class ScheduleView extends StatelessWidget {
                 ),
               ),
 
-              // Горизонтальный список дней месяца
               SizedBox(
                 height: 80,
                 child: ListView.builder(
@@ -128,7 +124,6 @@ class ScheduleView extends StatelessWidget {
                 ),
               ),
 
-              // Список доз
               Expanded(
                 child: items.isEmpty
                     ? const Center(

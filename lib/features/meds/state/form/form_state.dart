@@ -27,7 +27,6 @@ class MedFormState extends Equatable {
   });
 
   factory MedFormState.create() {
-    // дефолт: ежедневный приём в 09:00
     final defaultSchedule = Schedule.weekly(
       active: true,
       daysOfWeek: {1, 2, 3, 4, 5, 6, 7},

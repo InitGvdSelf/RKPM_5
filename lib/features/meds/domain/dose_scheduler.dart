@@ -30,7 +30,6 @@ class DoseScheduler {
       DateTime start,
       DateTime horizon,
       ) {
-    // Если дни недели не заданы — считаем, что надо КАЖДЫЙ ДЕНЬ (1..7)
     final effectiveDays = (med.schedule.daysOfWeek.isEmpty)
         ? {1, 2, 3, 4, 5, 6, 7}
         : med.schedule.daysOfWeek;

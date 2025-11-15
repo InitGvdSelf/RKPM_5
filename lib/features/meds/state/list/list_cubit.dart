@@ -32,7 +32,6 @@ class MedsListCubit extends Cubit<MedsListState> {
     refresh();
   }
 
-  /// Возвращает удалённое лекарство, чтобы View могла показать snackbar
   Medicine? deleteMedicine(String id) {
     final removed = medsState.deleteMedicine(id);
     refresh();

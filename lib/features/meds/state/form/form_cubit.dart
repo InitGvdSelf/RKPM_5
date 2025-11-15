@@ -56,7 +56,6 @@ class MedFormCubit extends Cubit<MedFormState> {
     }
   }
 
-  /// Собираем итоговый Medicine. Ошибки бросать не будем — максимум вернём null.
   Future<Medicine?> submit() async {
     if (state.name.trim().isEmpty) {
       emit(state.copyWith(error: 'Введите название лекарства'));

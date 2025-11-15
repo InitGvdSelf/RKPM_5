@@ -16,7 +16,6 @@ import 'package:rkpm_5/core/app_dependencies.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Глобальные сервисы/состояние
   final medsState = MedsState(
     repository: MedsRepository(),
     scheduler: DoseScheduler(),
@@ -31,7 +30,6 @@ Future<void> main() async {
     ImageService.instance.initialize(),
   ]);
 
-  // Роутер на общем состоянии
   final appRouter = AppRouter(medsState);
 
   runApp(

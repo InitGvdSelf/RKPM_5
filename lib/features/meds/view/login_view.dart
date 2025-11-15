@@ -29,7 +29,6 @@ class _LoginViewState extends State<LoginView> {
   String? _validateEmail(String? value) {
     final v = value?.trim() ?? '';
     if (v.isEmpty) return 'Введите логин';
-    // Не требуем '@', пусть будет любой логин
     return null;
   }
 
@@ -53,7 +52,6 @@ class _LoginViewState extends State<LoginView> {
     if (!mounted) return;
 
     if (ok) {
-      // после успешного входа — на профиль (или на Today, если хочешь)
       context.go(Routes.profile);
     } else if (cubit.state.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(

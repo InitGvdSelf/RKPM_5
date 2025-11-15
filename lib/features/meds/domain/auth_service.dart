@@ -13,7 +13,6 @@ class AuthService extends ChangeNotifier {
   UserAccount? get current => _current;
   bool get isLoggedIn => _current != null;
 
-  /// Восстановление пользователя при запуске приложения
   Future<void> restore() async {
     final prefs = await SharedPreferences.getInstance();
     final email = prefs.getString(_kEmail);

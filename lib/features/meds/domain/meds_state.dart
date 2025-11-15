@@ -18,7 +18,6 @@ class MedsState extends ChangeNotifier {
   bool _loaded = false;
   bool get loaded => _loaded;
 
-  // Храним как обычные списки, наружу отдаём read-only
   List<Medicine> _medicines = [];
   List<DoseEntry> _doses = [];
 
@@ -30,8 +29,6 @@ class MedsState extends ChangeNotifier {
   Future<void> init() async {
     _medicines = await repository.loadMeds();
     _doses     = await repository.loadDoses();
-
-    // Генерируем будущие дозы и сразу сохраняем изменения.
     final beforeLen = _doses.length;
     scheduler.ensureFutureDoses(_medicines, _doses);
     if (_doses.length != beforeLen) {
@@ -58,8 +55,6 @@ class MedsState extends ChangeNotifier {
     final i = _medicines.indexWhere((e) => e.id == m.id);
     if (i >= 0) {
       _medicines[i] = m;
-
-      // Пересобираем будущие дозы для этого лекарства
       _doses.removeWhere((e) =>
       e.medicineId == m.id &&
           e.plannedAt.isAfter(DateTime.now()) &&
@@ -85,7 +80,6 @@ class MedsState extends ChangeNotifier {
     _persist();
   }
 
-  // ---- Дозы ----
   void markDose(String doseId, DoseStatus status) {
     final i = _doses.indexWhere((e) => e.id == doseId);
     if (i < 0) return;
@@ -126,12 +120,10 @@ class MedsState extends ChangeNotifier {
     return list;
   }
 
-  // ---- Форматирование дат ----
   String fmtDate (DateTime d) => DateFormat('dd.MM.yyyy', 'ru').format(d);
   String fmtMonth(DateTime d) => DateFormat('LLLL yyyy', 'ru').format(d);
   String fmtTime (DateTime d) => DateFormat('HH:mm', 'ru').format(d);
 
-  /// Явный ручной вызов пересборки будущих доз + сохранение.
   void ensureFutureDoses() {
     scheduler.ensureFutureDoses(_medicines, _doses);
     _persist();

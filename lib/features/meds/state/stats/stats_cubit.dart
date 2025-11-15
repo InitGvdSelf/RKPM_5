@@ -17,7 +17,6 @@ class StatsCubit extends Cubit<StatsState> {
 
     try {
       final meds = medsState.medicines;
-      // предполагаем, что в MedsState есть список всех доз
       final doses = medsState.doses; // List<DoseEntry>
 
       final totalMeds = meds.length;

@@ -28,7 +28,6 @@ class _MedFormScreenState extends State<MedFormScreen> {
 
   late Schedule _schedule;
 
-  // зависимости из провайдера
   late ImageService _images;
   bool _imagesPrefetched = false;
 
@@ -74,7 +73,6 @@ class _MedFormScreenState extends State<MedFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // спрячем клавиатуру
     FocusScope.of(context).unfocus();
 
     String? url;
