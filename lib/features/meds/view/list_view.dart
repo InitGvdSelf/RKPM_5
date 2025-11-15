@@ -7,7 +7,7 @@ import 'package:rkpm_5/features/meds/screens/form_screen.dart';
 import 'package:rkpm_5/features/meds/state/list/list_cubit.dart';
 import 'package:rkpm_5/features/meds/state/list/list_state.dart';
 import 'package:rkpm_5/features/meds/domain/med_tile.dart';
-import 'package:rkpm_5/shared/widgets/empty_state.dart';
+import 'package:rkpm_5/features/meds/domain/empty_state.dart';
 
 class MedsListView extends StatelessWidget {
   const MedsListView({super.key});

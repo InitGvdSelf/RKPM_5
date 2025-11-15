@@ -9,7 +9,6 @@ class ScheduleCubit extends Cubit<ScheduleState> {
 
   ScheduleCubit({required this.medsState})
       : super(ScheduleState.initial()) {
-    // гарантируем, что будущие дозы посчитаны
     medsState.ensureFutureDoses();
   }
 
@@ -38,7 +37,6 @@ class ScheduleCubit extends Cubit<ScheduleState> {
 
   void markDose(String doseId, DoseStatus status) {
     medsState.markDose(doseId, status);
-    // дозы внутри MedsState поменялись → поднимаем revision, чтобы UI перерисовался
     emit(state.copyWith(revision: state.revision + 1));
   }
 

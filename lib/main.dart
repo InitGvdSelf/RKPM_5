@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:rkpm_5/app_router.dart';
-import 'package:rkpm_5/shared/app_theme.dart';
+import 'package:rkpm_5/features/meds/domain/app_theme.dart';
 
 // state & services
 import 'package:rkpm_5/features/meds/domain/meds_state.dart';
