@@ -16,7 +16,7 @@ class MedsListView extends StatelessWidget {
   Future<void> _add(BuildContext context) async {
     FocusScope.of(context).unfocus();
 
-    final created = await context.push<Medicine>(Routes.medsForm);
+    final created = await context.push<Medicine>(Routes.meds);
     if (!context.mounted || created == null) return;
 
     context.read<MedsListCubit>().addMedicine(created);
@@ -25,7 +25,7 @@ class MedsListView extends StatelessWidget {
   Future<void> _edit(BuildContext context, Medicine m) async {
     FocusScope.of(context).unfocus();
 
-    final updated = await context.push<Medicine>(Routes.medsForm, extra: m);
+    final updated = await context.push<Medicine>(Routes.meds, extra: m);
     if (!context.mounted || updated == null) return;
 
     context.read<MedsListCubit>().updateMedicine(updated);

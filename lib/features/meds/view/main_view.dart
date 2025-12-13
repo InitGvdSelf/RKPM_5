@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:rkpm_5/features/meds/screens/schedule_screen.dart';
 import 'package:rkpm_5/features/meds/screens/meds_screen.dart';
+import 'package:rkpm_5/features/meds/screens/pharmacies_screen.dart';
 import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
 import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
 
@@ -21,12 +22,14 @@ class MainView extends StatelessWidget {
         final pages = <Widget>[
           const ScheduleScreen(),
           const MedsListScreen(),
+          const PharmaciesScreen(),
           const StatsScreen(),
           const ProfileScreen(),
         ];
 
         return Scaffold(
           body: IndexedStack(index: currentIndex, children: pages),
+
           bottomNavigationBar: DecoratedBox(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
@@ -49,6 +52,10 @@ class MainView extends StatelessWidget {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.medication),
                   label: 'Лекарства',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.local_pharmacy),
+                  label: 'Аптеки',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.query_stats),

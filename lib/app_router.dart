@@ -8,7 +8,7 @@ import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 import 'package:rkpm_5/features/meds/screens/login_screen.dart';
 import 'package:rkpm_5/features/meds/screens/register_screen.dart';
-
+import 'package:rkpm_5/features/meds/screens/pharmacies_screen.dart';
 import 'package:rkpm_5/features/meds/screens/main_screen.dart';
 import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
 import 'package:rkpm_5/features/meds/screens/schedule_screen.dart';
@@ -20,11 +20,11 @@ import 'package:rkpm_5/features/meds/screens/settings_screen.dart';
 abstract class Routes {
   static const auth = '/auth';
   static const main = '/main';
-
+  static const pharmacies = '/pharmacies';
   static const profile = '/profile';
   static const schedule = '/schedule';
   static const meds = '/meds';
-  static const medsForm = '/meds/form';
+  static const med = '/med';
   static const stats = '/stats';
   static const settings = '/settings';
 
@@ -89,8 +89,8 @@ class AppRouter {
           builder: (context, state) => const MedsListScreen(),
         ),
         GoRoute(
-          path: Routes.medsForm,
-          name: 'meds_form',
+          path: Routes.med,
+          name: 'med',
           builder: (context, state) {
             final existing =
             state.extra is Medicine ? state.extra as Medicine : null;
@@ -106,6 +106,11 @@ class AppRouter {
           path: Routes.settings,
           name: 'settings',
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: Routes.pharmacies,
+          name: 'pharmacies',
+          builder: (context, state) => const PharmaciesScreen(),
         ),
       ],
     );
