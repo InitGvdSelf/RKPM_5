@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rkpm_5/core/app_dependencies.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -9,10 +10,11 @@ class SettingsView extends StatefulWidget {
 
 class _SettingsViewState extends State<SettingsView> {
   bool notificationsEnabled = true;
-  bool darkThemeEnabled = false;
 
   @override
   Widget build(BuildContext context) {
+    final deps = AppDependencies.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
       body: ListView(
@@ -26,8 +28,8 @@ class _SettingsViewState extends State<SettingsView> {
           SwitchListTile(
             title: const Text('Тёмная тема'),
             subtitle: const Text('Переключение оформления приложения'),
-            value: darkThemeEnabled,
-            onChanged: (v) => setState(() => darkThemeEnabled = v),
+            value: deps.theme.isDark,
+            onChanged: deps.theme.setDark,
           ),
           const Divider(),
           ListTile(
@@ -40,19 +42,6 @@ class _SettingsViewState extends State<SettingsView> {
                 applicationName: 'RKPM_5',
                 applicationVersion: '1.0.0',
                 applicationLegalese: 'Учебный проект',
-              );
-            },
-          ),
-          ListTile(
-            title: const Text('Сбросить настройки'),
-            trailing: const Icon(Icons.restore),
-            onTap: () {
-              setState(() {
-                notificationsEnabled = true;
-                darkThemeEnabled = false;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Настройки сброшены')),
               );
             },
           ),

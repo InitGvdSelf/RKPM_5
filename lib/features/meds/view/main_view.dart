@@ -27,27 +27,39 @@ class MainView extends StatelessWidget {
 
         return Scaffold(
           body: IndexedStack(index: currentIndex, children: pages),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: currentIndex,
-            onTap: (index) => context.read<MainCubit>().setTab(index),
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_month),
-                label: 'Расписание',
+          bottomNavigationBar: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
+                ),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.medication),
-                label: 'Лекарства',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.query_stats),
-                label: 'Статистика',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person),
-                label: 'Профиль',
-              ),
-            ],
+            ),
+            child: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              currentIndex: currentIndex,
+              onTap: (index) => context.read<MainCubit>().setTab(index),
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.calendar_month),
+                  label: 'Расписание',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.medication),
+                  label: 'Лекарства',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.query_stats),
+                  label: 'Статистика',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person),
+                  label: 'Профиль',
+                ),
+              ],
+            ),
           ),
         );
       },
