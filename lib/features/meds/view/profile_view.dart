@@ -151,37 +151,16 @@ class _ProfileViewState extends State<ProfileView> {
 
               const SizedBox(height: 24),
               const Divider(),
-
-              const SizedBox(height: 12),
-              Text('Навигация', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-
-              FilledButton.tonalIcon(
-                onPressed: () => context.push(Routes.schedule),
-                icon: const Icon(Icons.calendar_today),
-                label: const Text('Расписание'),
-              ),
-              const SizedBox(height: 8),
-              FilledButton.tonalIcon(
-                onPressed: () => context.push(Routes.meds),
-                icon: const Icon(Icons.medication),
-                label: const Text('Лекарства'),
-              ),
-              const SizedBox(height: 8),
-              FilledButton.tonalIcon(
-                onPressed: () => context.push(Routes.stats),
-                icon: const Icon(Icons.query_stats),
-                label: const Text('Статистика'),
-              ),
-
-              const SizedBox(height: 24),
-              const Divider(),
               const SizedBox(height: 12),
 
               FilledButton.icon(
-                onPressed: () => _signOut(cubit),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: state.isSaving ? null : () => _signOut(cubit),
                 icon: const Icon(Icons.logout),
-                label: const Text('Выйти'),
+                label: const Text('Выйти из аккаунта'),
               ),
             ],
           ),
