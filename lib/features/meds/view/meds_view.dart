@@ -16,7 +16,7 @@ class MedsListView extends StatelessWidget {
   Future<void> _add(BuildContext context) async {
     FocusScope.of(context).unfocus();
 
-    final created = await context.push<Medicine>(Routes.meds);
+    final created = await context.push<Medicine>(Routes.med);
     if (!context.mounted || created == null) return;
 
     context.read<MedsListCubit>().addMedicine(created);
@@ -25,12 +25,11 @@ class MedsListView extends StatelessWidget {
   Future<void> _edit(BuildContext context, Medicine m) async {
     FocusScope.of(context).unfocus();
 
-    final updated = await context.push<Medicine>(Routes.meds, extra: m);
+    final updated = await context.push<Medicine>(Routes.med, extra: m);
     if (!context.mounted || updated == null) return;
 
     context.read<MedsListCubit>().updateMedicine(updated);
   }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MedsListCubit, MedsListState>(
