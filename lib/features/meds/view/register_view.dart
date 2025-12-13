@@ -15,54 +15,50 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
-  final _form = GlobalKey<FormState>();
-  final _email = TextEditingController();
-  final _pass  = TextEditingController();
-  final _name  = TextEditingController();
-
-  bool _obscure = true;
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
 
   @override
   void dispose() {
-    _email.dispose();
-    _pass.dispose();
-    _name.dispose();
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
   String? _validateName(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Введите имя';
+    if ((v ?? '').trim().isEmpty) return 'Введите имя';
     return null;
   }
 
   String? _validateEmail(String? v) {
-    final value = v?.trim() ?? '';
+    final value = (v ?? '').trim();
     if (value.isEmpty) return 'Введите email';
     if (!value.contains('@')) return 'Некорректный email';
     return null;
   }
 
   String? _validatePassword(String? v) {
-    if (v == null || v.length < 4) return 'Минимум 4 символа';
+    final value = v ?? '';
+    if (value.length < 4) return 'Минимум 4 символа';
     return null;
   }
 
-  Future<void> _register(RegisterCubit cubit, RegisterState state) async {
-    final form = _form.currentState;
-    if (form == null) return;
-    if (!form.validate()) return;
-    if (state.isSubmitting) return;
+  Future<void> _register(BuildContext context, RegisterCubit cubit) async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final ok = await cubit.register(
-      name: _name.text.trim(),
-      email: _email.text.trim(),
-      password: _pass.text,
+      name: _nameCtrl.text.trim(),
+      email: _emailCtrl.text.trim(),
+      password: _passCtrl.text,
     );
 
     if (!mounted) return;
 
     if (ok) {
-      context.go(Routes.profile); // как и было: после регистрации — на профиль
+      context.go(Routes.main);
     } else if (cubit.state.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(cubit.state.errorMessage!)),
@@ -70,14 +66,8 @@ class _RegisterViewState extends State<RegisterView> {
     }
   }
 
-  void _openLogin() {
-    context.go(Routes.login);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocBuilder<RegisterCubit, RegisterState>(
       builder: (context, state) {
         final cubit = context.read<RegisterCubit>();
@@ -90,91 +80,59 @@ class _RegisterViewState extends State<RegisterView> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Form(
-                  key: _form,
-                  child: ListView(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'Создание аккаунта',
-                        style: theme.textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
                       TextFormField(
-                        controller: _name,
-                        textInputAction: TextInputAction.next,
-                        textCapitalization: TextCapitalization.words,
+                        controller: _nameCtrl,
                         decoration: const InputDecoration(
                           labelText: 'Имя',
-                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(),
                         ),
                         validator: _validateName,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
-                        controller: _email,
+                        controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Email',
-                          prefixIcon: Icon(Icons.mail),
+                          border: OutlineInputBorder(),
                         ),
                         validator: _validateEmail,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
-                        controller: _pass,
-                        obscureText: _obscure,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _register(cubit, state),
-                        decoration: InputDecoration(
+                        controller: _passCtrl,
+                        obscureText: true,
+                        decoration: const InputDecoration(
                           labelText: 'Пароль',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
-                          ),
+                          border: OutlineInputBorder(),
                         ),
                         validator: _validatePassword,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
-                        child: FilledButton.icon(
+                        child: FilledButton(
                           onPressed: state.isSubmitting
                               ? null
-                              : () => _register(cubit, state),
-                          icon: state.isSubmitting
+                              : () => _register(context, cubit),
+                          child: state.isSubmitting
                               ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                              : const Icon(Icons.check),
-                          label: const Text('Создать аккаунт'),
+                              : const Text('Создать аккаунт'),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      TextButton.icon(
-                        onPressed: _openLogin,
-                        icon: const Icon(Icons.login),
-                        label: const Text('У меня уже есть аккаунт'),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () => context.go(Routes.authWithMode('login')),
+                        child: const Text('Уже есть аккаунт? Войти'),
                       ),
-                      if (state.errorMessage != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          state.errorMessage!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.error,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
                     ],
                   ),
                 ),

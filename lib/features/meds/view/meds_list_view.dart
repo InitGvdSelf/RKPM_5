@@ -1,11 +1,12 @@
 // lib/features/meds/view/meds_list_view.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:rkpm_5/app_router.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
-import 'package:rkpm_5/features/meds/screens/form_screen.dart';
-import 'package:rkpm_5/features/meds/state/list/list_cubit.dart';
-import 'package:rkpm_5/features/meds/state/list/list_state.dart';
+import 'package:rkpm_5/features/meds/state/meds/meds_cubit.dart';
+import 'package:rkpm_5/features/meds/state/meds/meds_state.dart';
 import 'package:rkpm_5/features/meds/domain/med_tile.dart';
 import 'package:rkpm_5/features/meds/domain/empty_state.dart';
 
@@ -15,25 +16,19 @@ class MedsListView extends StatelessWidget {
   Future<void> _add(BuildContext context) async {
     FocusScope.of(context).unfocus();
 
-    final created = await Navigator.of(context).push<Medicine>(
-      MaterialPageRoute(builder: (_) => const MedFormScreen()),
-    );
+    final created = await context.push<Medicine>(Routes.medsForm);
     if (!context.mounted || created == null) return;
 
-    final cubit = context.read<MedsListCubit>();
-    cubit.addMedicine(created);
+    context.read<MedsListCubit>().addMedicine(created);
   }
 
   Future<void> _edit(BuildContext context, Medicine m) async {
     FocusScope.of(context).unfocus();
 
-    final updated = await Navigator.of(context).push<Medicine>(
-      MaterialPageRoute(builder: (_) => MedFormScreen(existing: m)),
-    );
+    final updated = await context.push<Medicine>(Routes.medsForm, extra: m);
     if (!context.mounted || updated == null) return;
 
-    final cubit = context.read<MedsListCubit>();
-    cubit.updateMedicine(updated);
+    context.read<MedsListCubit>().updateMedicine(updated);
   }
 
   @override
@@ -90,9 +85,7 @@ class MedsListView extends StatelessWidget {
                           content: Text('Удалено: ${removed.name}'),
                           action: SnackBarAction(
                             label: 'Отмена',
-                            onPressed: () {
-                              cubit.restoreMedicine(removed);
-                            },
+                            onPressed: () => cubit.restoreMedicine(removed),
                           ),
                         ),
                       );
@@ -116,8 +109,7 @@ class MedsListView extends StatelessWidget {
               ),
             ),
           ),
-          floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerFloat,
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
           floatingActionButton: hasMeds
               ? Padding(
             padding: EdgeInsets.only(

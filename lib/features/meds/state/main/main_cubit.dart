@@ -1,9 +1,9 @@
 import 'package:bloc/bloc.dart';
 
-import 'home_state.dart';
+import 'main_state.dart';
 
-class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(HomeState.initial());
+class MainCubit extends Cubit<MainState> {
+  MainCubit() : super(MainState.initial());
 
   void setTab(int index) {
     if (index == state.selectedIndex) return;

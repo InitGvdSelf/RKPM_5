@@ -4,22 +4,31 @@ import 'package:go_router/go_router.dart';
 
 import 'package:rkpm_5/features/meds/domain/meds_state.dart';
 import 'package:rkpm_5/features/meds/domain/auth_service.dart';
+import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 import 'package:rkpm_5/features/meds/screens/login_screen.dart';
+import 'package:rkpm_5/features/meds/screens/register_screen.dart';
+
+import 'package:rkpm_5/features/meds/screens/main_screen.dart';
 import 'package:rkpm_5/features/meds/screens/profile_screen.dart';
 import 'package:rkpm_5/features/meds/screens/schedule_screen.dart';
-import 'package:rkpm_5/features/meds/screens/list_screen.dart';
+import 'package:rkpm_5/features/meds/screens/meds_screen.dart';
+import 'package:rkpm_5/features/meds/screens/med_screen.dart';
 import 'package:rkpm_5/features/meds/screens/stats_screen.dart';
-
-import 'features/meds/screens/register_screen.dart';
+import 'package:rkpm_5/features/meds/screens/settings_screen.dart';
 
 abstract class Routes {
-  static const login    = '/login';
-  static const profile  = '/profile';
-  static const register = '/register';
+  static const auth = '/auth';
+  static const main = '/main';
+
+  static const profile = '/profile';
   static const schedule = '/schedule';
-  static const meds     = '/meds';
-  static const stats    = '/stats';
+  static const meds = '/meds';
+  static const medsForm = '/meds/form';
+  static const stats = '/stats';
+  static const settings = '/settings';
+
+  static String authWithMode([String mode = 'login']) => '$auth?mode=$mode';
 }
 
 class AppRouter {
@@ -28,37 +37,51 @@ class AppRouter {
 
   AppRouter(this.state) {
     router = GoRouter(
-      initialLocation: Routes.profile,
+      initialLocation: Routes.authWithMode('login'),
       redirect: (context, s) async {
         final signedIn = await AuthService.instance.isSignedIn();
-        final goingToLogin = s.matchedLocation == Routes.login;
+        final goingToAuth = s.matchedLocation == Routes.auth;
 
-        if (!signedIn && !goingToLogin) return Routes.login;
-        if (signedIn && goingToLogin) return Routes.profile;
+        if (!signedIn && !goingToAuth) {
+          return Routes.authWithMode('login');
+        }
+
+        if (signedIn && goingToAuth) {
+          return Routes.main;
+        }
+
         return null;
       },
       routes: [
+        // 1) Авторизация (login/register) — одна "ручка"
         GoRoute(
-          path: Routes.login,
-          name: 'login',
-          builder: (context, state) => const LoginScreen(),
+          path: Routes.auth,
+          name: 'auth',
+          builder: (context, state) {
+            final mode = state.uri.queryParameters['mode'] ?? 'login';
+            return mode == 'register'
+                ? const RegisterScreen()
+                : const LoginScreen();
+          },
         ),
+
+        // 2) Главный экран (main)
+        GoRoute(
+          path: Routes.main,
+          name: 'main',
+          builder: (context, state) => const MainScreen(),
+        ),
+
+        // Остальные бизнес-экраны
         GoRoute(
           path: Routes.profile,
           name: 'profile',
           builder: (context, state) => const ProfileScreen(),
         ),
         GoRoute(
-          path: Routes.register,
-          builder: (context, state) => const RegisterScreen(),
-        ),
-        GoRoute(
           path: Routes.schedule,
           name: 'schedule',
-          builder: (context, stateGo) {
-            this.state.ensureFutureDoses();
-            return const ScheduleScreen();
-          },
+          builder: (context, state) => const ScheduleScreen(),
         ),
         GoRoute(
           path: Routes.meds,
@@ -66,9 +89,23 @@ class AppRouter {
           builder: (context, state) => const MedsListScreen(),
         ),
         GoRoute(
+          path: Routes.medsForm,
+          name: 'meds_form',
+          builder: (context, state) {
+            final existing =
+            state.extra is Medicine ? state.extra as Medicine : null;
+            return MedFormScreen(existing: existing);
+          },
+        ),
+        GoRoute(
           path: Routes.stats,
           name: 'stats',
           builder: (context, state) => const StatsScreen(),
+        ),
+        GoRoute(
+          path: Routes.settings,
+          name: 'settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     );

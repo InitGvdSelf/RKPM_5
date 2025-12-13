@@ -4,7 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 import 'package:rkpm_5/features/meds/domain/meds_state.dart';
 
-import 'list_state.dart';
+import 'meds_state.dart';
 
 class MedsListCubit extends Cubit<MedsListState> {
   final MedsState medsState;

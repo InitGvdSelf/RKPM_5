@@ -2,8 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:rkpm_5/features/meds/state/form/form_cubit.dart';
-import 'package:rkpm_5/features/meds/state/form/form_state.dart';
+import 'package:rkpm_5/features/meds/state/med/med_cubit.dart';
+import 'package:rkpm_5/features/meds/state/med/med_state.dart';
 
 class MedFormView extends StatefulWidget {
   const MedFormView({super.key});

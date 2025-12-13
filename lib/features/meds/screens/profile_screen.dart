@@ -26,11 +26,7 @@ class ProfileScreen extends StatelessWidget {
         auth: deps.auth,
         images: deps.images,
       ),
-      child: ProfileView(
-        onOpenToday: onOpenToday,
-        onOpenMeds: onOpenMeds,
-        onOpenStats: onOpenStats,
-      ),
+      child: const ProfileView(),
     );
   }
 }

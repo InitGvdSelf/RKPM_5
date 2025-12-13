@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 import 'package:rkpm_5/features/meds/domain/image_service.dart';
 
-import 'form_state.dart';
+import 'med_state.dart';
 
 class MedFormCubit extends Cubit<MedFormState> {
   final ImageService images;

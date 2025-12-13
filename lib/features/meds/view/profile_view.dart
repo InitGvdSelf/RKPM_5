@@ -9,16 +9,7 @@ import 'package:rkpm_5/features/meds/state/profile/profile_cubit.dart';
 import 'package:rkpm_5/features/meds/state/profile/profile_state.dart';
 
 class ProfileView extends StatefulWidget {
-  const ProfileView({
-    super.key,
-    this.onOpenToday,
-    this.onOpenMeds,
-    this.onOpenStats,
-  });
-
-  final VoidCallback? onOpenToday;
-  final VoidCallback? onOpenMeds;
-  final VoidCallback? onOpenStats;
+  const ProfileView({super.key});
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -28,7 +19,7 @@ class _ProfileViewState extends State<ProfileView> {
   late final TextEditingController nameCtrl;
   late final TextEditingController ageCtrl;
 
-  bool _initializedFromState = false;
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -45,35 +36,30 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> _save(ProfileCubit cubit) async {
-    await cubit.saveProfile(
-      name: nameCtrl.text,
-      ageText: ageCtrl.text,
-    );
+    await cubit.saveProfile(name: nameCtrl.text, ageText: ageCtrl.text);
 
     if (!mounted) return;
-    final state = cubit.state;
-    if (state.error == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Профиль сохранён')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.error!)),
-      );
-    }
+
+    final err = cubit.state.error;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(err ?? 'Профиль сохранён')),
+    );
   }
 
   Future<void> _changeAvatar(ProfileCubit cubit) async {
-    await cubit.changeAvatar(
-      name: nameCtrl.text,
-      ageText: ageCtrl.text,
-    );
+    await cubit.changeAvatar(name: nameCtrl.text, ageText: ageCtrl.text);
+    if (!mounted) return;
+    if (cubit.state.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(cubit.state.error!)),
+      );
+    }
   }
 
   Future<void> _signOut(ProfileCubit cubit) async {
     await cubit.signOut();
     if (!mounted) return;
-    context.go(Routes.login);
+    context.go(Routes.authWithMode('login'));
   }
 
   @override
@@ -82,8 +68,8 @@ class _ProfileViewState extends State<ProfileView> {
 
     return BlocConsumer<ProfileCubit, ProfileState>(
       listener: (context, state) {
-        if (!_initializedFromState && state.profile != null) {
-          _initializedFromState = true;
+        if (!_initialized && state.profile != null) {
+          _initialized = true;
           final p = state.profile!;
           nameCtrl.text = p.name;
           ageCtrl.text = p.age > 0 ? p.age.toString() : '';
@@ -91,17 +77,23 @@ class _ProfileViewState extends State<ProfileView> {
       },
       builder: (context, state) {
         final cubit = context.read<ProfileCubit>();
-        final profile = state.profile;
-        final avatarUrl = profile?.avatarUrl;
+        final p = state.profile;
 
-        if (state.isLoading && !_initializedFromState) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+        if (state.isLoading && !_initialized) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Профиль')),
+          appBar: AppBar(
+            title: const Text('Профиль'),
+            actions: [
+              IconButton(
+                tooltip: 'Настройки',
+                onPressed: () => context.push(Routes.settings),
+                icon: const Icon(Icons.settings),
+              ),
+            ],
+          ),
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -112,34 +104,25 @@ class _ProfileViewState extends State<ProfileView> {
                     radius: 60,
                     backgroundColor: Colors.grey.shade300,
                     child: ClipOval(
-                      child: avatarUrl != null
+                      child: (p?.avatarUrl != null)
                           ? CachedNetworkImage(
-                        imageUrl: avatarUrl,
+                        imageUrl: p!.avatarUrl!,
                         width: 120,
                         height: 120,
                         fit: BoxFit.cover,
-                        fadeInDuration:
-                        const Duration(milliseconds: 200),
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        errorWidget: (context, url, error) =>
+                        placeholder: (_, __) =>
+                        const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        errorWidget: (_, __, ___) =>
                         const Icon(Icons.person, size: 48),
                       )
-                          : const Icon(
-                        Icons.person,
-                        size: 48,
-                      ),
+                          : const Icon(Icons.person, size: 48),
                     ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-              Text(
-                'Личные данные',
-                style: theme.textTheme.titleMedium,
-              ),
+
+              Text('Личные данные', style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
 
               TextField(
@@ -163,38 +146,30 @@ class _ProfileViewState extends State<ProfileView> {
               FilledButton.icon(
                 onPressed: state.isSaving ? null : () => _save(cubit),
                 icon: const Icon(Icons.save),
-                label: const Text('Сохранить изменения'),
+                label: const Text('Сохранить'),
               ),
 
               const SizedBox(height: 24),
               const Divider(),
-              const SizedBox(height: 12),
 
-              Text(
-                'Навигация',
-                style: theme.textTheme.titleMedium,
-              ),
+              const SizedBox(height: 12),
+              Text('Навигация', style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
 
               FilledButton.tonalIcon(
-                onPressed: widget.onOpenToday ??
-                        () => context.push(Routes.schedule),
+                onPressed: () => context.push(Routes.schedule),
                 icon: const Icon(Icons.calendar_today),
                 label: const Text('Расписание'),
               ),
               const SizedBox(height: 8),
-
               FilledButton.tonalIcon(
-                onPressed: widget.onOpenMeds ??
-                        () => context.push(Routes.meds),
+                onPressed: () => context.push(Routes.meds),
                 icon: const Icon(Icons.medication),
                 label: const Text('Лекарства'),
               ),
               const SizedBox(height: 8),
-
               FilledButton.tonalIcon(
-                onPressed: widget.onOpenStats ??
-                        () => context.push(Routes.stats),
+                onPressed: () => context.push(Routes.stats),
                 icon: const Icon(Icons.query_stats),
                 label: const Text('Статистика'),
               ),
@@ -206,7 +181,7 @@ class _ProfileViewState extends State<ProfileView> {
               FilledButton.icon(
                 onPressed: () => _signOut(cubit),
                 icon: const Icon(Icons.logout),
-                label: const Text('Выйти из аккаунта'),
+                label: const Text('Выйти'),
               ),
             ],
           ),

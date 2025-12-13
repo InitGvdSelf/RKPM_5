@@ -26,23 +26,22 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-  String? _validateEmail(String? value) {
-    final v = value?.trim() ?? '';
-    if (v.isEmpty) return 'Введите логин';
+  String? _validateEmail(String? v) {
+    final value = (v ?? '').trim();
+    if (value.isEmpty) return 'Введите email';
+    if (!value.contains('@')) return 'Некорректный email';
     return null;
   }
 
-  String? _validatePassword(String? value) {
-    final v = value ?? '';
-    if (v.isEmpty) return 'Введите пароль';
-    if (v.length < 4) return 'Минимум 4 символа';
+  String? _validatePassword(String? v) {
+    final value = v ?? '';
+    if (value.isEmpty) return 'Введите пароль';
+    if (value.length < 4) return 'Минимум 4 символа';
     return null;
   }
 
-  Future<void> _submit(LoginCubit cubit, LoginState state) async {
-    final form = _formKey.currentState;
-    if (form == null) return;
-    if (!form.validate()) return;
+  Future<void> _signIn(BuildContext context, LoginCubit cubit) async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final ok = await cubit.signIn(
       email: _emailCtrl.text.trim(),
@@ -52,7 +51,7 @@ class _LoginViewState extends State<LoginView> {
     if (!mounted) return;
 
     if (ok) {
-      context.go(Routes.profile);
+      context.go(Routes.main);
     } else if (cubit.state.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(cubit.state.errorMessage!)),
@@ -60,91 +59,66 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  void _openRegister() {
-    context.go(Routes.register);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocBuilder<LoginCubit, LoginState>(
       builder: (context, state) {
         final cubit = context.read<LoginCubit>();
 
         return Scaffold(
+          appBar: AppBar(title: const Text('Вход')),
           body: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Card(
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Вход в аккаунт',
-                          style: theme.textTheme.titleLarge,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            labelText: 'E-mail',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: _validateEmail,
+                        validator: _validateEmail,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _passCtrl,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Пароль',
+                          border: OutlineInputBorder(),
                         ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _passCtrl,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Пароль',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: _validatePassword,
+                        validator: _validatePassword,
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: state.isSubmitting
+                              ? null
+                              : () => _signIn(context, cubit),
+                          child: state.isSubmitting
+                              ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                              : const Text('Войти'),
                         ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: state.isSubmitting
-                                ? null
-                                : () => _submit(cubit, state),
-                            icon: state.isSubmitting
-                                ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
-                                : const Icon(Icons.login),
-                            label: const Text('Войти'),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextButton.icon(
-                          onPressed: _openRegister,
-                          icon: const Icon(Icons.person_add_alt_1),
-                          label: const Text('Регистрация'),
-                        ),
-                        if (state.errorMessage != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            state.errorMessage!,
-                            style: theme.textTheme.bodySmall
-                                ?.copyWith(color: theme.colorScheme.error),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () =>
+                            context.go(Routes.authWithMode('register')),
+                        child: const Text('Нет аккаунта? Зарегистрироваться'),
+                      ),
+                    ],
                   ),
                 ),
               ),
