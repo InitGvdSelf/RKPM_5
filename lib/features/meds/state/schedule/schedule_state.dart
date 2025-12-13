@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class ScheduleState extends Equatable {
   final DateTime selectedDate;
-  final int revision; // чтобы форсить rebuild, когда поменялись дозы
+  final int revision;
 
   const ScheduleState({
     required this.selectedDate,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:rkpm_5/features/meds/models/medicine.dart';
-import 'package:rkpm_5/features/meds/domain/meds_state.dart';
 
 import '../state/schedule/schedule_cubit.dart';
 import '../state/schedule/schedule_state.dart';
@@ -210,7 +209,6 @@ class ScheduleView extends StatelessWidget {
       String doseId,
       String initialNote,
       ) async {
-    final medsState = context.read<ScheduleCubit>().medsState;
     final ctrl = TextEditingController(text: initialNote);
     String? result;
 

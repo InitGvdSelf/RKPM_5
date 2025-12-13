@@ -1,12 +1,12 @@
 import 'package:equatable/equatable.dart';
 
 class StatsState extends Equatable {
-  final int totalMeds;      // всего лекарств
-  final int totalDoses;     // всего доз
-  final int takenDoses;     // принятых
-  final int skippedDoses;   // пропущенных
-  final int pendingDoses;   // ожидающих
-  final double adherence;   // приверженность (0..1)
+  final int totalMeds;
+  final int totalDoses;
+  final int takenDoses;
+  final int skippedDoses;
+  final int pendingDoses;
+  final double adherence;
   final bool isLoading;
   final String? error;
 

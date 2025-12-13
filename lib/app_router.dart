@@ -53,7 +53,6 @@ class AppRouter {
         return null;
       },
       routes: [
-        // 1) Авторизация (login/register) — одна "ручка"
         GoRoute(
           path: Routes.auth,
           name: 'auth',
@@ -65,14 +64,12 @@ class AppRouter {
           },
         ),
 
-        // 2) Главный экран (main)
         GoRoute(
           path: Routes.main,
           name: 'main',
           builder: (context, state) => const MainScreen(),
         ),
 
-        // Остальные бизнес-экраны
         GoRoute(
           path: Routes.profile,
           name: 'profile',
