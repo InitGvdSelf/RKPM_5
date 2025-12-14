@@ -85,6 +85,8 @@ class AppRouter {
           name: 'meds',
           builder: (context, state) => const MedsListScreen(),
         ),
+
+        // ✅ FIX HERE: MedFormScreen(existing: ...)
         GoRoute(
           path: Routes.med,
           name: 'med',
@@ -94,6 +96,7 @@ class AppRouter {
             return MedFormScreen(existing: existing);
           },
         ),
+
         GoRoute(
           path: Routes.stats,
           name: 'stats',

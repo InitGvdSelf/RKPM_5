@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:rkpm_5/app_router.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 import '../state/schedule/schedule_cubit.dart';
@@ -22,7 +24,16 @@ class ScheduleView extends StatelessWidget {
         )..sort((a, b) => a.plannedAt.compareTo(b.plannedAt));
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Расписание')),
+          appBar: AppBar(
+            title: const Text('Расписание'),
+            actions: [
+              IconButton(
+                tooltip: 'Статистика',
+                onPressed: () => context.push(Routes.stats),
+                icon: const Icon(Icons.query_stats),
+              ),
+            ],
+          ),
           body: Column(
             children: [
               Padding(
@@ -46,14 +57,14 @@ class ScheduleView extends StatelessWidget {
                       icon: const Icon(Icons.chevron_right),
                     ),
                     TextButton(
-                      onPressed: () =>
-                          context.read<ScheduleCubit>().goToday(),
+                      onPressed: () => context.read<ScheduleCubit>().goToday(),
                       child: const Text('Сегодня'),
                     ),
                   ],
                 ),
               ),
 
+              // ✅ "календарь" (горизонтальная лента дней)
               SizedBox(
                 height: 80,
                 child: ListView.builder(
@@ -111,7 +122,6 @@ class ScheduleView extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              // Заголовок «выбранная дата»
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Align(
@@ -125,9 +135,7 @@ class ScheduleView extends StatelessWidget {
 
               Expanded(
                 child: items.isEmpty
-                    ? const Center(
-                  child: Text('На выбранный день доз нет'),
-                )
+                    ? const Center(child: Text('На выбранный день доз нет'))
                     : ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: items.length,
@@ -157,8 +165,7 @@ class ScheduleView extends StatelessWidget {
                         ),
                         trailing: PopupMenuButton<String>(
                           onSelected: (v) async {
-                            final cubit =
-                            context.read<ScheduleCubit>();
+                            final cubit = context.read<ScheduleCubit>();
 
                             if (v == 'take') {
                               cubit.markDose(d.id, DoseStatus.taken);
@@ -167,11 +174,8 @@ class ScheduleView extends StatelessWidget {
                               cubit.markDose(d.id, DoseStatus.skipped);
                             }
                             if (v == 'note') {
-                              final newNote = await _editNote(
-                                context,
-                                d.id,
-                                d.note,
-                              );
+                              final newNote =
+                              await _editNote(context, d.id, d.note);
                               if (newNote != null) {
                                 cubit.updateDoseNote(d.id, newNote);
                               }
@@ -229,10 +233,7 @@ class ScheduleView extends StatelessWidget {
             onPressed: () {
               result = ctrl.text.trim();
               Navigator.pop(c);
-              // MedsState меняем через кубит
-              context
-                  .read<ScheduleCubit>()
-                  .updateDoseNote(doseId, result!);
+              context.read<ScheduleCubit>().updateDoseNote(doseId, result!);
             },
             child: const Text('Сохранить'),
           ),
