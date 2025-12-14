@@ -6,4 +6,3 @@ abstract class ProfileRepository {
   Future<Either<Failure, Profile?>> getProfile();
   Future<Either<Failure, void>> updateProfile(Profile profile);
 }
-
