@@ -1,4 +1,6 @@
 import 'package:rkpm_5/data/datasources/auth/auth_local_data_source.dart';
+import 'package:rkpm_5/data/datasources/auth/auth_secure_data_source.dart';
+import 'package:rkpm_5/data/datasources/settings/settings_local_data_source.dart';
 import 'package:rkpm_5/data/datasources/meds/meds_local_data_source.dart';
 import 'package:rkpm_5/data/datasources/diary/diary_local_data_source.dart';
 import 'package:rkpm_5/data/datasources/visits/visits_local_data_source.dart';
@@ -7,6 +9,7 @@ import 'package:rkpm_5/data/datasources/pharmacies/pharmacies_local_data_source.
 import 'package:rkpm_5/data/datasources/profile/profile_local_data_source.dart';
 
 import 'package:rkpm_5/data/repositories/auth_repository_impl.dart';
+import 'package:rkpm_5/data/repositories/settings_repository_impl.dart';
 import 'package:rkpm_5/data/repositories/meds_repository_impl.dart';
 import 'package:rkpm_5/data/repositories/schedule_repository_impl.dart';
 import 'package:rkpm_5/data/repositories/diary_repository_impl.dart';
@@ -16,6 +19,7 @@ import 'package:rkpm_5/data/repositories/pharmacies_repository_impl.dart';
 import 'package:rkpm_5/data/repositories/profile_repository_impl.dart';
 
 import 'package:rkpm_5/domain/repositories/auth_repository.dart';
+import 'package:rkpm_5/domain/repositories/settings_repository.dart';
 import 'package:rkpm_5/domain/repositories/meds_repository.dart';
 import 'package:rkpm_5/domain/repositories/schedule_repository.dart';
 import 'package:rkpm_5/domain/repositories/diary_repository.dart';
@@ -47,13 +51,20 @@ import 'package:rkpm_5/domain/usecases/pharmacies/get_pharmacies_usecase.dart';
 import 'package:rkpm_5/domain/usecases/pharmacies/search_pharmacies_usecase.dart';
 import 'package:rkpm_5/domain/usecases/profile/get_profile_usecase.dart';
 import 'package:rkpm_5/domain/usecases/profile/update_profile_usecase.dart';
+import 'package:rkpm_5/domain/usecases/settings/get_settings_usecase.dart';
+import 'package:rkpm_5/domain/usecases/settings/update_dark_theme_usecase.dart';
+import 'package:rkpm_5/domain/usecases/settings/update_notifications_usecase.dart';
 
 import 'package:rkpm_5/core/utils/dose_scheduler.dart';
+import 'package:rkpm_5/core/theme_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Dependency Injection Container
 class DI {
   // Data Sources
   static late final AuthLocalDataSource authLocalDataSource;
+  static late final AuthSecureDataSource authSecureDataSource;
+  static late final SettingsLocalDataSource settingsLocalDataSource;
   static late final MedsLocalDataSource medsLocalDataSource;
   static late final DiaryLocalDataSource diaryLocalDataSource;
   static late final VisitsLocalDataSource visitsLocalDataSource;
@@ -63,6 +74,7 @@ class DI {
 
   // Repositories
   static late final AuthRepository authRepository;
+  static late final SettingsRepository settingsRepository;
   static late final MedsRepository medsRepository;
   static late final ScheduleRepository scheduleRepository;
   static late final DiaryRepository diaryRepository;
@@ -95,13 +107,28 @@ class DI {
   static late final SearchPharmaciesUseCase searchPharmaciesUseCase;
   static late final GetProfileUseCase getProfileUseCase;
   static late final UpdateProfileUseCase updateProfileUseCase;
+  static late final GetSettingsUseCase getSettingsUseCase;
+  static late final UpdateDarkThemeUseCase updateDarkThemeUseCase;
+  static late final UpdateNotificationsUseCase updateNotificationsUseCase;
 
   // Utils
   static late final DoseScheduler doseScheduler;
 
+  // Theme Controller (singleton)
+  static ThemeController? _themeController;
+  static ThemeController get themeController {
+    _themeController ??= ThemeController();
+    return _themeController!;
+  }
+
   static Future<void> init() async {
+    // External dependencies
+    final sharedPreferences = await SharedPreferences.getInstance();
+
     // Initialize Data Sources
     authLocalDataSource = AuthLocalDataSource();
+    authSecureDataSource = AuthSecureDataSource();
+    settingsLocalDataSource = SettingsLocalDataSource(sharedPreferences);
     medsLocalDataSource = MedsLocalDataSource();
     diaryLocalDataSource = DiaryLocalDataSource();
     visitsLocalDataSource = VisitsLocalDataSource();
@@ -110,7 +137,11 @@ class DI {
     profileLocalDataSource = ProfileLocalDataSource();
 
     // Initialize Repositories
-    authRepository = AuthRepositoryImpl(authLocalDataSource);
+    authRepository = AuthRepositoryImpl(
+      localDataSource: authLocalDataSource,
+      secureDataSource: authSecureDataSource,
+    );
+    settingsRepository = SettingsRepositoryImpl(settingsLocalDataSource);
     medsRepository = MedsRepositoryImpl(medsLocalDataSource);
     scheduleRepository = ScheduleRepositoryImpl(medsLocalDataSource);
     diaryRepository = DiaryRepositoryImpl(diaryLocalDataSource);
@@ -143,9 +174,15 @@ class DI {
     searchPharmaciesUseCase = SearchPharmaciesUseCase(pharmaciesRepository);
     getProfileUseCase = GetProfileUseCase(profileRepository);
     updateProfileUseCase = UpdateProfileUseCase(profileRepository);
+    getSettingsUseCase = GetSettingsUseCase(settingsRepository);
+    updateDarkThemeUseCase = UpdateDarkThemeUseCase(settingsRepository);
+    updateNotificationsUseCase = UpdateNotificationsUseCase(settingsRepository);
 
     // Initialize Utils
     doseScheduler = DoseScheduler();
+
+    // Initialize Theme Controller and load saved theme
+    await themeController.initialize();
   }
 }
 

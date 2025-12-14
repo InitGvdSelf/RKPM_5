@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rkpm_5/core/theme_controller.dart';
+import 'package:rkpm_5/app/di.dart';
 import 'package:rkpm_5/features/profile/view/settings_view.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -7,7 +7,7 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SettingsView(theme: ThemeController());
+    return SettingsView(theme: DI.themeController);
   }
 }
 

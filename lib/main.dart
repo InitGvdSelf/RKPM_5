@@ -4,7 +4,6 @@ import 'package:rkpm_5/app/app.dart';
 import 'package:rkpm_5/app/app_router.dart';
 import 'package:rkpm_5/app/di.dart';
 import 'package:rkpm_5/app/bloc_observer.dart';
-import 'package:rkpm_5/core/theme_controller.dart';
 import 'package:rkpm_5/core/services/image_service.dart';
 
 Future<void> main() async {
@@ -24,7 +23,8 @@ Future<void> main() async {
 
   final appRouter = AppRouter();
 
-  final theme = ThemeController(); // по умолчанию светлая
+  // Theme controller is initialized in DI.init() and loads saved preference
+  final theme = DI.themeController;
 
   runApp(
     RKPMApp(router: appRouter.router, theme: theme),
