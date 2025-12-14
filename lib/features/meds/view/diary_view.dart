@@ -86,7 +86,7 @@ class DiaryView extends StatelessWidget {
   Future<void> _addDialog(BuildContext context) async {
     final noteCtrl = TextEditingController();
     int mood = 3;
-    DateTime date = DateUtils.dateOnly(DateTime.now());
+    DateTime date = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
     await showDialog(
       context: context,
@@ -145,7 +145,7 @@ class DiaryView extends StatelessWidget {
             FilledButton(
               onPressed: () {
                 final entry = DiaryEntry(
-                  id: '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(9999)}',
+                  id: '${DateTime.now().microsecondsSinceEpoch}_${DateTime.now().millisecondsSinceEpoch % 9999}',
                   date: date,
                   mood: mood,
                   note: noteCtrl.text.trim(),

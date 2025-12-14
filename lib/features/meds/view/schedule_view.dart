@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:rkpm_5/app_router.dart';
+import 'package:rkpm_5/app/app_router.dart';
 import 'package:rkpm_5/features/meds/models/medicine.dart';
 
 import '../state/schedule/schedule_cubit.dart';
@@ -70,10 +70,7 @@ class ScheduleView extends StatelessWidget {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: DateUtils.getDaysInMonth(
-                    selected.year,
-                    selected.month,
-                  ),
+                  itemCount: DateTime(selected.year, selected.month + 1, 0).day,
                   itemBuilder: (context, index) {
                     final day = index + 1;
                     final date = DateTime(selected.year, selected.month, day);

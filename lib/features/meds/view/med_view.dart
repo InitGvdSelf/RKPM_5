@@ -1,9 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'package:rkpm_5/features/meds/state/med/med_cubit.dart';
-import 'package:rkpm_5/features/meds/state/med/med_state.dart';
+import 'package:rkpm_5/features/meds/cubit/med_form_cubit.dart';
+import 'package:rkpm_5/features/meds/cubit/med_form_state.dart';
 
 class MedFormView extends StatefulWidget {
   const MedFormView({super.key});
@@ -62,8 +61,7 @@ class _MedFormViewState extends State<MedFormView> {
 
         return Scaffold(
           appBar: AppBar(
-            title:
-            Text(isEdit ? 'Редактирование лекарства' : 'Новое лекарство'),
+            title: Text(isEdit ? 'Редактирование лекарства' : 'Новое лекарство'),
           ),
           body: SafeArea(
             child: ListView(
@@ -124,20 +122,18 @@ class _MedFormViewState extends State<MedFormView> {
                           borderRadius: BorderRadius.circular(16),
                           child: state.imageUrl != null
                               ? CachedNetworkImage(
-                            imageUrl: state.imageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, _) =>
-                            const Center(
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2)),
-                            errorWidget: (_, __, ___) =>
-                            const Icon(Icons.broken_image, size: 48),
-                          )
+                                  imageUrl: state.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, _) => const Center(
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                  errorWidget: (_, __, ___) =>
+                                      const Icon(Icons.broken_image, size: 48),
+                                )
                               : Container(
-                            color: Colors.grey.shade200,
-                            child:
-                            const Icon(Icons.image, size: 48),
-                          ),
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(Icons.image, size: 48),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -167,10 +163,10 @@ class _MedFormViewState extends State<MedFormView> {
                       : () => _onSave(cubit, state),
                   icon: state.isSaving
                       ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Icon(Icons.check),
                   label: Text(isEdit ? 'Сохранить' : 'Добавить'),
                 ),

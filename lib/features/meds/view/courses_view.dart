@@ -110,7 +110,7 @@ class CoursesView extends StatelessWidget {
     final timesCtrl = TextEditingController(text: '1');
     final noteCtrl = TextEditingController();
 
-    DateTime start = DateUtils.dateOnly(DateTime.now());
+    DateTime start = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     DateTime? end;
 
     await showDialog(
@@ -227,7 +227,7 @@ class CoursesView extends StatelessWidget {
                 final times = int.tryParse(timesCtrl.text.trim()) ?? 1;
 
                 final entry = MedCourse(
-                  id: '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(9999)}',
+                  id: '${DateTime.now().microsecondsSinceEpoch}_${DateTime.now().millisecondsSinceEpoch % 9999}',
                   medicineId: selectedMedId,
                   medicineName: name,
                   startDate: start,

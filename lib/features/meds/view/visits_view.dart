@@ -161,7 +161,7 @@ class VisitsView extends StatelessWidget {
             FilledButton(
               onPressed: () {
                 final entry = Visit(
-                  id: '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(9999)}',
+                  id: '${DateTime.now().microsecondsSinceEpoch}_${DateTime.now().millisecondsSinceEpoch % 9999}',
                   dateTime: dt,
                   doctor: doctorCtrl.text.trim(),
                   reason: reasonCtrl.text.trim(),

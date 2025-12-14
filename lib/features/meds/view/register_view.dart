@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:rkpm_5/app_router.dart';
+import 'package:rkpm_5/app/app_router.dart';
 import 'package:rkpm_5/features/meds/state/register/register_cubit.dart';
 import 'package:rkpm_5/features/meds/state/register/register_state.dart';
 

@@ -1,38 +1,33 @@
-// lib/features/meds/view/meds_list_view.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:rkpm_5/app_router.dart';
-import 'package:rkpm_5/features/meds/models/medicine.dart';
-import 'package:rkpm_5/features/meds/state/meds/meds_cubit.dart';
-import 'package:rkpm_5/features/meds/state/meds/meds_state.dart';
-import 'package:rkpm_5/features/meds/domain/med_tile.dart';
-import 'package:rkpm_5/features/meds/domain/empty_state.dart';
+import 'package:rkpm_5/app/app_router.dart';
+import 'package:rkpm_5/core/models/medicine_model.dart';
+import 'package:rkpm_5/features/meds/cubit/meds_cubit.dart';
+import 'package:rkpm_5/features/meds/cubit/meds_state.dart';
+import 'package:rkpm_5/features/meds/widgets/med_tile.dart';
+import 'package:rkpm_5/shared/widgets/empty_state.dart';
 
 class MedsListView extends StatelessWidget {
   const MedsListView({super.key});
 
   Future<void> _add(BuildContext context) async {
     FocusScope.of(context).unfocus();
-
     final created = await context.push<Medicine>(Routes.med);
     if (!context.mounted || created == null) return;
-
-    context.read<MedsListCubit>().addMedicine(created);
+    context.read<MedsCubit>().addMedicine(created);
   }
 
   Future<void> _edit(BuildContext context, Medicine m) async {
     FocusScope.of(context).unfocus();
-
     final updated = await context.push<Medicine>(Routes.med, extra: m);
     if (!context.mounted || updated == null) return;
-
-    context.read<MedsListCubit>().updateMedicine(updated);
+    context.read<MedsCubit>().updateMedicine(updated);
   }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MedsListCubit, MedsListState>(
+    return BlocBuilder<MedsCubit, MedsState>(
       builder: (context, state) {
         final meds = state.medicines;
         final hasMeds = meds.isNotEmpty;
@@ -48,83 +43,84 @@ class MedsListView extends StatelessWidget {
           body: SafeArea(
             child: hasMeds
                 ? ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: meds.length,
-              itemBuilder: (context, i) {
-                final m = meds[i];
-                return Dismissible(
-                  key: ValueKey(m.id),
-                  background: Container(color: Colors.red),
-                  confirmDismiss: (_) async {
-                    final ok = await showDialog<bool>(
-                      context: context,
-                      builder: (c) => AlertDialog(
-                        title: const Text('Удалить лекарство?'),
-                        content: Text('«${m.name}» будет удалено.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(c, false),
-                            child: const Text('Отмена'),
-                          ),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(c, true),
-                            child: const Text('Удалить'),
-                          ),
-                        ],
-                      ),
-                    );
-                    return ok ?? false;
-                  },
-                  onDismissed: (_) {
-                    final cubit = context.read<MedsListCubit>();
-                    final removed = cubit.deleteMedicine(m.id);
-                    if (removed != null && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Удалено: ${removed.name}'),
-                          action: SnackBarAction(
-                            label: 'Отмена',
-                            onPressed: () => cubit.restoreMedicine(removed),
-                          ),
+                    padding: const EdgeInsets.all(12),
+                    itemCount: meds.length,
+                    itemBuilder: (context, i) {
+                      final m = meds[i];
+                      return Dismissible(
+                        key: ValueKey(m.id),
+                        background: Container(color: Colors.red),
+                        confirmDismiss: (_) async {
+                          final ok = await showDialog<bool>(
+                            context: context,
+                            builder: (c) => AlertDialog(
+                              title: const Text('Удалить лекарство?'),
+                              content: Text('«${m.name}» будет удалено.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(c, false),
+                                  child: const Text('Отмена'),
+                                ),
+                                FilledButton(
+                                  onPressed: () => Navigator.pop(c, true),
+                                  child: const Text('Удалить'),
+                                ),
+                              ],
+                            ),
+                          );
+                          return ok ?? false;
+                        },
+                        onDismissed: (_) {
+                          final cubit = context.read<MedsCubit>();
+                          cubit.deleteMedicine(m.id).then((removed) {
+                            if (removed != null && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Удалено: ${removed.name}'),
+                                  action: SnackBarAction(
+                                    label: 'Отмена',
+                                    onPressed: () => cubit.restoreMedicine(removed),
+                                  ),
+                                ),
+                              );
+                            }
+                          });
+                        },
+                        child: MedTile(
+                          med: m,
+                          onTap: () => _edit(context, m),
                         ),
                       );
-                    }
-                  },
-                  child: MedTile(
-                    med: m,
-                    onTap: () => _edit(context, m),
-                  ),
-                );
-              },
-            )
+                    },
+                  )
                 : EmptyState(
-              icon: Icons.medication,
-              title: 'Нет лекарств',
-              subtitle: 'Добавьте первое лекарство',
-              action: FilledButton.icon(
-                onPressed: () => _add(context),
-                icon: const Icon(Icons.add),
-                label: const Text('Добавить лекарство'),
-              ),
-            ),
+                    icon: Icons.medication,
+                    title: 'Нет лекарств',
+                    subtitle: 'Добавьте первое лекарство',
+                    action: FilledButton.icon(
+                      onPressed: () => _add(context),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Добавить лекарство'),
+                    ),
+                  ),
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
           floatingActionButton: hasMeds
               ? Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewPadding.bottom + 8,
-              left: 12,
-              right: 12,
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () => _add(context),
-                icon: const Icon(Icons.add),
-                label: const Text('Добавить лекарство'),
-              ),
-            ),
-          )
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewPadding.bottom + 8,
+                    left: 12,
+                    right: 12,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => _add(context),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Добавить лекарство'),
+                    ),
+                  ),
+                )
               : null,
         );
       },
