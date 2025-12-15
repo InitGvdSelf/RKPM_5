@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:rkpm_5/core/models/weather.dart';
 import 'package:rkpm_5/data/datasources/remote/api/exceptions/network_exceptions.dart';
+import 'package:rkpm_5/data/datasources/remote/mappers/weather_mapper.dart';
 import 'package:rkpm_5/dependency_container.dart';
 
 class WeatherScreen extends StatefulWidget {
@@ -16,7 +17,9 @@ class WeatherScreen extends StatefulWidget {
 class _WeatherScreenState extends State<WeatherScreen> {
   final _controller = TextEditingController(text: 'Stockholm');
   bool _loading = false;
+
   Weather? _weather;
+  List<Weather>? _forecast;
   String? _error;
 
   Future<void> _load() async {
@@ -24,18 +27,27 @@ class _WeatherScreenState extends State<WeatherScreen> {
       _loading = true;
       _error = null;
       _weather = null;
+      _forecast = null;
     });
 
     try {
-      final w = await widget.di.getWeatherUseCase.execute(_controller.text);
-      setState(() => _weather = w);
+      // current weather via UseCase
+      final current = await widget.di.getWeatherUseCase.execute(_controller.text);
+
+      // forecast via DataSource
+      final forecastDTOs =
+      await widget.di.weatherDataSource.getFiveDayForecast(city: _controller.text);
+      final forecast = forecastDTOs.map((e) => e.toModel()).toList();
+
+      setState(() {
+        _weather = current;
+        _forecast = forecast;
+      });
     } on DioException catch (_) {
       setState(() => _error = 'Unexpected Dio error');
     } on ArgumentError catch (e) {
       setState(() => _error = e.message as String? ?? e.toString());
     } catch (e) {
-      // If error mapping interceptor worked, `e` will often be DioException with `.error` of NetworkException,
-      // but in UI we handle both cases.
       if (e is NetworkException) {
         setState(() => _error = e.message);
       } else {
@@ -52,16 +64,47 @@ class _WeatherScreenState extends State<WeatherScreen> {
     super.dispose();
   }
 
+  Widget _buildForecast() {
+    final list = _forecast;
+    if (list == null || list.isEmpty) return const Text('No forecast available.');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: 24),
+        const Text(
+          '5-day forecast:',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        ...list.take(5).map(
+              (w) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              '${w.updatedAt.toString().substring(0, 16)} — ${w.temperatureFormatted}'
+                  '${w.description != null ? ', ${w.description}' : ''}',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildResult() {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) return Text('Error: $_error', style: const TextStyle(color: Colors.red));
+    if (_error != null) {
+      return Text('Error: $_error', style: const TextStyle(color: Colors.red));
+    }
     if (_weather == null) return const Text('Enter a city and press "Get weather".');
 
     final w = _weather!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('${w.city}${w.country != null ? ', ${w.country}' : ''}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(
+          '${w.city}${w.country != null ? ', ${w.country}' : ''}',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         Text('Temp: ${w.temperatureFormatted} (feels like ${w.feelsLikeFormatted})'),
         if (w.description != null) Text('Description: ${w.description}'),
@@ -70,6 +113,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
         const SizedBox(height: 8),
         Text('Daytime: ${w.isDaytime ? 'yes' : 'no'}'),
         Text('Updated: ${w.updatedAt}'),
+        const SizedBox(height: 16),
+        _buildForecast(),
       ],
     );
   }
@@ -77,7 +122,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PR13 — Dio Weather Demo')),
+      appBar: AppBar(title: const Text('PR13 — Weather Demo')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
