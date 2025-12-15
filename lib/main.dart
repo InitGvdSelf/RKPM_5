@@ -3,11 +3,11 @@ import 'package:rkpm_5/dependency_container.dart';
 import 'package:rkpm_5/weather_screen.dart';
 
 void main() {
-  runApp(const Pr13DemoApp());
+  runApp(const Pr13RetrofitDemoApp());
 }
 
-class Pr13DemoApp extends StatelessWidget {
-  const Pr13DemoApp({super.key});
+class Pr13RetrofitDemoApp extends StatelessWidget {
+  const Pr13RetrofitDemoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class Pr13DemoApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'PR13 Dio Demo',
+      title: 'PR13 Retrofit Demo',
       home: WeatherScreen(di: di),
     );
   }
