@@ -1,32 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:bloc/bloc.dart';
-import 'package:rkpm_5/app/app.dart';
-import 'package:rkpm_5/app/app_router.dart';
-import 'package:rkpm_5/app/di.dart';
-import 'package:rkpm_5/app/bloc_observer.dart';
-import 'package:rkpm_5/core/services/image_service.dart';
+import 'package:rkpm_5/dependency_container.dart';
+import 'package:rkpm_5/weather_screen.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  runApp(const Pr13DemoApp());
+}
 
-  // Initialize DI
-  await DI.init();
+class Pr13DemoApp extends StatelessWidget {
+  const Pr13DemoApp({super.key});
 
-  // Initialize BlocObserver
-  Bloc.observer = AppBlocObserver();
+  @override
+  Widget build(BuildContext context) {
+    final di = Pr13DependencyContainer();
 
-  // Initialize services
-  await ImageService.instance.initialize();
-
-  // Restore auth session (if needed)
-  await DI.authRepository.getCurrentUser();
-
-  final appRouter = AppRouter();
-
-  // Theme controller is initialized in DI.init() and loads saved preference
-  final theme = DI.themeController;
-
-  runApp(
-    RKPMApp(router: appRouter.router, theme: theme),
-  );
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'PR13 Dio Demo',
+      home: WeatherScreen(di: di),
+    );
+  }
 }
