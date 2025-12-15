@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rkpm_5/app/di.dart';
+import 'package:rkpm_5/core/models/drug_info_model.dart';
 import 'package:rkpm_5/features/meds/cubit/med_form_cubit.dart';
 import 'package:rkpm_5/features/meds/cubit/med_form_state.dart';
 
@@ -41,6 +43,86 @@ class _MedFormViewState extends State<MedFormView> {
     }
   }
 
+  Future<void> _searchDrugInfo() async {
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Введите название лекарства')),
+      );
+      return;
+    }
+
+    try {
+      final result = await DI.searchDrugInfoUseCase(name);
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(failure.message)),
+          );
+        },
+        (drugInfo) {
+          if (drugInfo == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Информация не найдена')),
+            );
+          } else {
+            _showDrugInfoDialog(drugInfo);
+          }
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка: ${e.toString()}')),
+      );
+    }
+  }
+
+  void _showDrugInfoDialog(DrugInfo drugInfo) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(drugInfo.title),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (drugInfo.indications != null) ...[
+                Text(
+                  'Показания к применению:',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                Text(drugInfo.indications!),
+                const SizedBox(height: 12),
+              ],
+              if (drugInfo.warnings != null) ...[
+                Text(
+                  'Предупреждения:',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  drugInfo.warnings!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -67,14 +149,25 @@ class _MedFormViewState extends State<MedFormView> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                TextFormField(
-                  controller: _nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Название',
-                    border: OutlineInputBorder(),
-                  ),
-                  textInputAction: TextInputAction.next,
-                  onChanged: cubit.updateName,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _nameCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Название',
+                          border: OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        onChanged: cubit.updateName,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: _searchDrugInfo,
+                      child: const Text('Найти в\nopenFDA'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

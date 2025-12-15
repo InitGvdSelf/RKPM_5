@@ -58,6 +58,16 @@ import 'package:rkpm_5/domain/usecases/settings/update_notifications_usecase.dar
 import 'package:rkpm_5/core/utils/dose_scheduler.dart';
 import 'package:rkpm_5/core/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:rkpm_5/data/datasources/remote/dadata/dadata_datasource.dart';
+import 'package:rkpm_5/data/datasources/remote/overpass/overpass_datasource.dart';
+import 'package:rkpm_5/data/datasources/remote/openfda/openfda_datasource.dart';
+import 'package:rkpm_5/domain/usecases/pharmacies/suggest_address_usecase.dart';
+import 'package:rkpm_5/domain/usecases/pharmacies/geocode_address_usecase.dart';
+import 'package:rkpm_5/domain/usecases/pharmacies/reverse_geocode_usecase.dart';
+import 'package:rkpm_5/domain/usecases/pharmacies/find_nearby_pharmacies_usecase.dart';
+import 'package:rkpm_5/domain/usecases/pharmacies/get_pharmacy_details_usecase.dart';
+import 'package:rkpm_5/domain/usecases/meds/search_drug_info_usecase.dart';
 
 /// Dependency Injection Container
 class DI {
@@ -66,6 +76,11 @@ class DI {
   static late final AuthSecureDataSource authSecureDataSource;
   static late final SettingsLocalDataSource settingsLocalDataSource;
   static late final MedsLocalDataSource medsLocalDataSource;
+
+  // Remote Data Sources
+  static late final DadataDataSource dadataDataSource;
+  static late final OverpassDataSource overpassDataSource;
+  static late final OpenFdaDataSource openFdaDataSource;
   static late final DiaryLocalDataSource diaryLocalDataSource;
   static late final VisitsLocalDataSource visitsLocalDataSource;
   static late final CoursesLocalDataSource coursesLocalDataSource;
@@ -111,8 +126,19 @@ class DI {
   static late final UpdateDarkThemeUseCase updateDarkThemeUseCase;
   static late final UpdateNotificationsUseCase updateNotificationsUseCase;
 
+  // Remote API Use Cases
+  static late final SuggestAddressUseCase suggestAddressUseCase;
+  static late final GeocodeAddressUseCase geocodeAddressUseCase;
+  static late final ReverseGeocodeUseCase reverseGeocodeUseCase;
+  static late final FindNearbyPharmaciesUseCase findNearbyPharmaciesUseCase;
+  static late final GetPharmacyDetailsUseCase getPharmacyDetailsUseCase;
+  static late final SearchDrugInfoUseCase searchDrugInfoUseCase;
+
   // Utils
   static late final DoseScheduler doseScheduler;
+
+  // HTTP Client
+  static late final Dio dio;
 
   // Theme Controller (singleton)
   static ThemeController? _themeController;
@@ -125,11 +151,28 @@ class DI {
     // External dependencies
     final sharedPreferences = await SharedPreferences.getInstance();
 
+    // Initialize Dio with timeouts and JSON headers
+    dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+
     // Initialize Data Sources
     authLocalDataSource = AuthLocalDataSource();
     authSecureDataSource = AuthSecureDataSource();
     settingsLocalDataSource = SettingsLocalDataSource(sharedPreferences);
     medsLocalDataSource = MedsLocalDataSource();
+
+    // Initialize Remote Data Sources
+    dadataDataSource = DadataDataSource(dio);
+    overpassDataSource = OverpassDataSource(dio);
+    openFdaDataSource = OpenFdaDataSource(dio);
     diaryLocalDataSource = DiaryLocalDataSource();
     visitsLocalDataSource = VisitsLocalDataSource();
     coursesLocalDataSource = CoursesLocalDataSource();
@@ -177,6 +220,14 @@ class DI {
     getSettingsUseCase = GetSettingsUseCase(settingsRepository);
     updateDarkThemeUseCase = UpdateDarkThemeUseCase(settingsRepository);
     updateNotificationsUseCase = UpdateNotificationsUseCase(settingsRepository);
+
+    // Initialize Remote API Use Cases
+    suggestAddressUseCase = SuggestAddressUseCase(dadataDataSource);
+    geocodeAddressUseCase = GeocodeAddressUseCase(dadataDataSource);
+    reverseGeocodeUseCase = ReverseGeocodeUseCase(dadataDataSource);
+    findNearbyPharmaciesUseCase = FindNearbyPharmaciesUseCase(overpassDataSource);
+    getPharmacyDetailsUseCase = GetPharmacyDetailsUseCase(overpassDataSource);
+    searchDrugInfoUseCase = SearchDrugInfoUseCase(openFdaDataSource);
 
     // Initialize Utils
     doseScheduler = DoseScheduler();
