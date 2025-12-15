@@ -58,7 +58,8 @@ import 'package:rkpm_5/domain/usecases/settings/update_notifications_usecase.dar
 import 'package:rkpm_5/core/utils/dose_scheduler.dart';
 import 'package:rkpm_5/core/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dio/dio.dart';
+import 'package:rkpm_5/data/datasources/remote/api/dio_client_with_interceptors.dart';
+import 'package:rkpm_5/data/datasources/remote/config/api_config.dart';
 import 'package:rkpm_5/data/datasources/remote/dadata/dadata_datasource.dart';
 import 'package:rkpm_5/data/datasources/remote/overpass/overpass_datasource.dart';
 import 'package:rkpm_5/data/datasources/remote/openfda/openfda_datasource.dart';
@@ -137,8 +138,10 @@ class DI {
   // Utils
   static late final DoseScheduler doseScheduler;
 
-  // HTTP Client
-  static late final Dio dio;
+  // HTTP Clients
+  static late final DioClientWithInterceptors dadataClient;
+  static late final DioClientWithInterceptors overpassClient;
+  static late final DioClientWithInterceptors openFdaClient;
 
   // Theme Controller (singleton)
   static ThemeController? _themeController;
@@ -151,16 +154,18 @@ class DI {
     // External dependencies
     final sharedPreferences = await SharedPreferences.getInstance();
 
-    // Initialize Dio with timeouts and JSON headers
-    dio = Dio(
-      BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ),
+    // Initialize HTTP Clients with interceptors
+    dadataClient = DioClientWithInterceptors(
+      baseUrl: ApiConfig.dadataBaseUrl,
+      defaultHeaders: {
+        'Authorization': 'Token ${ApiConfig.dadataToken}',
+      },
+    );
+    overpassClient = DioClientWithInterceptors(
+      baseUrl: ApiConfig.overpassBaseUrl,
+    );
+    openFdaClient = DioClientWithInterceptors(
+      baseUrl: ApiConfig.openFdaBaseUrl,
     );
 
     // Initialize Data Sources
@@ -170,9 +175,9 @@ class DI {
     medsLocalDataSource = MedsLocalDataSource();
 
     // Initialize Remote Data Sources
-    dadataDataSource = DadataDataSource(dio);
-    overpassDataSource = OverpassDataSource(dio);
-    openFdaDataSource = OpenFdaDataSource(dio);
+    dadataDataSource = DadataDataSource(dadataClient);
+    overpassDataSource = OverpassDataSource(overpassClient);
+    openFdaDataSource = OpenFdaDataSource(openFdaClient);
     diaryLocalDataSource = DiaryLocalDataSource();
     visitsLocalDataSource = VisitsLocalDataSource();
     coursesLocalDataSource = CoursesLocalDataSource();

@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:rkpm_5/data/datasources/remote/config/api_config.dart';
+import 'package:rkpm_5/data/datasources/remote/api/dio_client_with_interceptors.dart';
 import 'package:rkpm_5/data/datasources/remote/overpass/dto/overpass_response_dto.dart';
 
 /// Remote data source for Overpass API (OpenStreetMap queries).
 class OverpassDataSource {
-  final Dio dio;
+  final DioClientWithInterceptors client;
 
-  OverpassDataSource(this.dio);
+  OverpassDataSource(this.client);
 
   /// Find pharmacies near coordinates within radius.
   /// POST /interpreter with Overpass QL query.
@@ -29,8 +29,8 @@ out body;
 out skel qt;
 ''';
 
-      final response = await dio.post(
-        '${ApiConfig.overpassBaseUrl}/interpreter',
+      final response = await client.post(
+        '/interpreter',
         data: query,
         options: Options(
           contentType: 'text/plain',
@@ -67,8 +67,8 @@ $osmType($id);
 out body;
 ''';
 
-      final response = await dio.post(
-        '${ApiConfig.overpassBaseUrl}/interpreter',
+      final response = await client.post(
+        '/interpreter',
         data: query,
         options: Options(
           contentType: 'text/plain',

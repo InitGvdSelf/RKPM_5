@@ -1,12 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:rkpm_5/data/datasources/remote/api/dio_client_with_interceptors.dart';
 import 'package:rkpm_5/data/datasources/remote/config/api_config.dart';
 import 'package:rkpm_5/data/datasources/remote/dadata/dto/dadata_suggest_dto.dart';
 
 /// Remote data source for DaData API (address suggestions and geocoding).
 class DadataDataSource {
-  final Dio dio;
+  final DioClientWithInterceptors client;
 
-  DadataDataSource(this.dio);
+  DadataDataSource(this.client);
 
   /// Get address suggestions while typing.
   /// POST /suggest/address with query.
@@ -14,11 +15,10 @@ class DadataDataSource {
     ApiConfig.validateDadataToken();
 
     try {
-      final response = await dio.post(
-        '${ApiConfig.dadataBaseUrl}/suggest/address',
+      final response = await client.post(
+        '/suggest/address',
         options: Options(
           headers: {
-            'Authorization': 'Token ${ApiConfig.dadataToken}',
             'Content-Type': 'application/json',
           },
         ),
@@ -72,11 +72,10 @@ class DadataDataSource {
     ApiConfig.validateDadataToken();
 
     try {
-      final response = await dio.post(
-        '${ApiConfig.dadataBaseUrl}/geolocate/address',
+      final response = await client.post(
+        '/geolocate/address',
         options: Options(
           headers: {
-            'Authorization': 'Token ${ApiConfig.dadataToken}',
             'Content-Type': 'application/json',
           },
         ),
