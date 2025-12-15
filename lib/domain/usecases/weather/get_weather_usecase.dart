@@ -1,5 +1,5 @@
 import 'package:rkpm_5/data/datasources/remote/api/weather_datasource.dart';
-import 'package:rkpm_5/data/datasources/remote/dto/mappers/weather_mapper.dart';
+import 'package:rkpm_5/data/datasources/remote/mappers/weather_mapper.dart';
 import 'package:rkpm_5/core/models/weather.dart';
 
 class GetWeatherUseCase {
