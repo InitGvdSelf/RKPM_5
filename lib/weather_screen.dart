@@ -77,7 +77,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PR13 — Dio Weather Demo')),
+      appBar: AppBar(title: const Text('PR13 — Retrofit Weather Demo')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
